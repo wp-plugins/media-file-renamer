@@ -10,26 +10,38 @@ This plugins allows you to rename physically the media files using their titles,
 
 == Description ==
 
-This plugins allows you to rename physically the media files using their titles, and update theirs references in the posts automatically (links, images sources, ...). This is done using the Media Manager. It also works fine with Windows and IIS.
+With this plugin, by updating the name of the image / media, you will also :
+
+*	rename physically the filename
+*	modify the guid of the media
+*	update all the references to that media in the associated post if there is any (links, sources...)
+
+It has been tested and works ALSO with Windows and IIS. If the name cannot be renamed, a warning will be write to the error log but there will be no crash.
+
 
 == Installation ==
 
 1. Upload `media-file-renamer.php` to the `/wp-content/plugins/` directory
 2. Activate the plugin through the 'Plugins' menu in WordPress
 
+
 == Upgrade Notice ==
 
 Simply replace `media-file-renamer.php` by the new one.
+
 
 == Frequently Asked Questions ==
 
 No questions yet.
 
+
 == Screenshots ==
 
 1. Just like this. Note that the screenshot is very similar to the one from rename-media (0.1).
 
+
 == Changelog ==
+
 
 = 0.2 =
 * Tiny corrections.
