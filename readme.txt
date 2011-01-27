@@ -4,7 +4,7 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_i
 Tags: rename, file, media, management, image, renamer
 Requires at least: 3.0.4
 Tested up to: 3.0.4
-Stable tag: trunk
+Stable tag: 0.1
 
 This plugins allows you to rename physically the media files using their titles, and update theirs links in the posts.
 
