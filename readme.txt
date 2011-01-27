@@ -1,42 +1,42 @@
 === Plugin Name ===
-Contributors: johnny5
-Donate link: http://urbangiraffe.com/about/support/
-Tags: media, image, rename, management
-Requires at least: 2.9
-Tested up to: 3.1
+Contributors: tigroumeow
+Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=JAWE2XWH7ZE5U
+Tags: rename, file, media
+Requires at least: 3.0.4
+Tested up to: 3.0.4
 Stable tag: trunk
 
-Rename underlying media files from the WordPress media management interface
+This plugins allows you to rename physically the media files using their titles, and update theirs links in the posts.
 
 == Description ==
 
-Enhances the WordPress media library by allowing you to rename the underlying media files. Any change to a media item's title will result in the media filename also being changed.
+This plugins allows you to rename physically the media files using their titles, and update theirs references in the posts automatically. This is done using the Media Manager.
 
-See the screenshot for more details of where to rename media files.
-
-Note that all thumbnails will also be renamed. If you are using a caching plugin, such as WP Super Cache, then you will need to clear your cache so that any references are updated. This plugin does not update existing direct links to files (links inside a WordPress gallery will change).
+It's very similar to the plugin called rename-media (0.1) except:
+- it works with Windows and IIS
+- in the case there is nothing to do (title wasn't renamed), it will consume less processor time
+- it modifies the post in which the media is attached by updating the links (img, url, etc...)
+- the guid of the media is the filename + the id instead of the shortlink to the file
+- it logs warnings
 
 == Installation ==
 
-The plugin is simple to install:
+1. Upload `media-file-renamer.php` to the `/wp-content/plugins/` directory
+2. Activate the plugin through the 'Plugins' menu in WordPress
 
-1. Download `rename-media.zip`
-1. Unzip
-1. Upload html-purified directory to your `/wp-content/plugins` directory
-1. Go to the plugin management page and enable the plugin
-1. Rename a media item by changing the title from the WordPress media management interface
+== Upgrade Notice ==
 
-You can find full details of installing a plugin on the [plugin installation page](http://urbangiraffe.com/articles/how-to-install-a-wordpress-plugin/).
+Simply replace `media-file-renamer.php` by the new one.
+
+== Frequently Asked Questions ==
+
+No questions yet.
 
 == Screenshots ==
 
-1. Changing the media title will result in the filename also changing
+1. Just like this. Note that the screenshot is very similar to the one from rename-media (0.1).
 
 == Changelog ==
 
 = 0.1 =
-* Initial release
-
-= 0.1.1 =
-* Store original filename in _original_filename meta data
-* Don't redirect after editing if we came from the admin interface
+* First release.
