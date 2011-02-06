@@ -4,9 +4,9 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_i
 Tags: rename, file, media, management, image, renamer
 Requires at least: 3.0.4
 Tested up to: 3.1
-Stable tag: 0.2
+Stable tag: 0.3
 
-This plugins allows you to rename physically the media files using their titles, and update theirs links in the posts.
+This plugins allows you to rename physically the media files by updating their titles. It also updates theirs links in the posts automatically.
 
 == Description ==
 
@@ -14,7 +14,7 @@ With this plugin, by updating the name of the image / media, you will also :
 
 *	rename physically the filename
 *	modify the guid of the media
-*	update all the references to that media in the associated post if there is any (links, sources...)
+*	update all the references to that media in the associated post if there is any (img, src, url...)
 
 It has been tested and works ALSO with Windows and IIS. If the name cannot be renamed, a warning will be write to the error log but there will be no crash.
 
@@ -42,6 +42,9 @@ No questions yet.
 
 == Changelog ==
 
+= 0.3 =
+* Corrections + improvements.
+* Handles well the 'special cases' now.
 
 = 0.2 =
 * Tiny corrections.
