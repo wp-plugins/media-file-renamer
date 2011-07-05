@@ -3,7 +3,7 @@
 Plugin Name: Media File Renamer
 Plugin URI: http://www.meow.fr/media-file-renamer
 Description: Renames media files based on their titles and updates the associated posts links.
-Version: 0.3
+Version: 0.32
 Author: Jordy Theiller
 Author URI: http://www.meow.fr
 Remarks: John Godley originaly developed rename-media (http://urbangiraffe.com/plugins/rename-media/), but it wasn't working on Windows, had issues with apostrophes, and was not updating the links in the posts. That's why Media File Renamer exists.
@@ -78,7 +78,6 @@ function mfrh_attachment_fields_to_save( $post, $attachment ) {
 		$article->post_content = str_replace( $old_filename, $new_filename, $article->post_content );
 	}
 	
-	
 	// Loop through the different sizes in the case of an image, and rename them.
 	// Also change the article links if there are any
 	foreach ( $meta['sizes'] as $size => $meta_size ) {
@@ -87,8 +86,11 @@ function mfrh_attachment_fields_to_save( $post, $attachment ) {
 		$meta_new_filename = str_replace( $noext_old_filename, $noext_new_filename, $meta_old_filename );
 		$meta_new_filepath = $directory . '/' . $meta_new_filename;
 		
-		rename( $meta_old_filepath, $meta_new_filepath );
-		$meta['sizes'][$size]['file'] = $meta_new_filename;
+		// ak: Double check files exist before trying to rename.
+		if ( file_exists($meta_old_filepath) && ((!file_exists($meta_new_filepath)) || is_writable($meta_new_filepath)) ) {
+		   rename($meta_old_filepath, $meta_new_filepath);
+		   $meta['sizes'][$size]['file'] = $meta_new_filename;
+		}
 		
 		if ( $media_library_mode && !empty( $article ) ) {
 			$article->post_content = str_replace( $meta_old_filename, $meta_new_filename, $article->post_content );
