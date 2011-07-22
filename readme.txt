@@ -3,8 +3,8 @@ Contributors: TigrouMeow
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=JAWE2XWH7ZE5U
 Tags: rename, file, media, management, image, renamer
 Requires at least: 3.0.4
-Tested up to: 3.2
-Stable tag: 0.32
+Tested up to: 3.2.1
+Stable tag: 0.34
 
 This plugins allows you to rename physically the media files by updating their titles. It also updates theirs links in the posts automatically.
 
@@ -42,7 +42,10 @@ No questions yet.
 
 == Changelog ==
 
-= 0.35 =
+= 0.34 =
+* The GUID is now updated using the URL of the images and not the post ID + title (http://wordpress.org/support/topic/plugin-media-file-renamer-incorrect-guid-fix-serious-bug?replies=2#post-2239192).
+
+= 0.32 =
 * Double-check before physically renaming the files.
 
 = 0.3 =
