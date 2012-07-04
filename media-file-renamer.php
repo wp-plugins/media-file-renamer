@@ -3,7 +3,7 @@
 Plugin Name: Media File Renamer
 Plugin URI: http://www.meow.fr/media-file-renamer
 Description: Renames media files based on their titles and updates the associated posts links.
-Version: 0.4
+Version: 0.5
 Author: Jordy Meow
 Author URI: http://www.meow.fr
 Remarks: John Godley originaly developed rename-media (http://urbangiraffe.com/plugins/rename-media/), but it wasn't working on Windows, had issues with apostrophes, and was not updating the links in the posts. That's why Media File Renamer exists.
@@ -21,23 +21,174 @@ add_filter( 'attachment_fields_to_save', 'mfrh_attachment_fields_to_save', 1, 2 
 add_filter( 'media_send_to_editor', 'mfrh_media_send_to_editor', 20, 3 );
 add_action( 'media_row_actions', 'mfrh_media_row_actions', 10, 2 );
 add_action( 'admin_head', 'mfrh_admin_head' );
+add_action( 'admin_menu', 'mfrh_admin_menu' );
+add_action( 'wp_ajax_mfrh_rename_media', 'mfrh_wp_ajax_mfrh_rename_media' );
+add_filter( 'views_upload', 'mfrh_views_upload' );
+add_action( 'pre_get_posts', 'mfrh_pre_get_posts' );
 
+/**
+ *
+ * 'RENAME' LINK
+ *
+ */
+
+function mfrh_pre_get_posts ( $query ) {
+	if ( !empty( $_GET['renameflag'] ) && $_GET['renameflag'] == true ) {
+		$query->query_vars['meta_key'] = '_require_file_renaming';
+		$query->query_vars['meta_value'] = true;
+	}
+	return $query;
+}
+ 
+function mfrh_views_upload( $views ) {
+	mfrh_file_counter( $flagged, $total );
+	$views['mfrh_flagged'] = sprintf("<a href='upload.php?renameflag=1'>%s</a> (%d)", __("To be renamed", 'media-file-renamer'), $flagged);
+    return $views;
+}
+ 
+ function mfrh_media_row_actions( $actions, $post ) {
+	$require_file_renaming = get_post_meta( $post->ID, '_require_file_renaming', true );
+	if ( $require_file_renaming ) {
+		$newaction['mfrh_rename_file'] = '<a href="?mfrh_rename=' . $post->ID . '" title="Rename files" rel="permalink">' . __( "Rename files", 'media-file-renamer' ) . '</a>';
+		return array_merge( $actions, $newaction );
+	}
+	return $actions;
+}
+ 
 function mfrh_admin_head() {
 	if ( ! empty( $_GET['mfrh_rename'] ) ) {
 		$mfrh_rename = $_GET['mfrh_rename'];
 		mfrh_attachment_fields_to_save( get_post( $mfrh_rename, ARRAY_A ), null );
 		$_SERVER['REQUEST_URI'] = remove_query_arg(array('mfrh_rename'), $_SERVER['REQUEST_URI']);
 	}
+	
+	?>
+	<script type="text/javascript" >
+	
+		var current;
+		var ids = [];
+	
+		function mfrh_process_next () {
+			var data = { action: 'mfrh_rename_media', subaction: 'renameMediaId', id: ids[current - 1] };
+			jQuery('#mfrh_progression').text(current + "/" + ids.length);
+			jQuery.post(ajaxurl, data, function (response) {
+				if (++current <= ids.length)
+					mfrh_process_next();
+				else
+					jQuery('#mfrh_progression').text("<?php echo __( "Done.", 'media-file-renamer' ); ?>");
+			});
+		}
+	
+		function mfrh_rename_media (all) {
+			current = 1;
+			ids = [];
+			var data = { action: 'mfrh_rename_media', subaction: 'getMediaIds', all: all ? '1' : '0' };
+			jQuery('#mfrh_progression').text("<?php echo __( "Please wait...", 'media-file-renamer' ); ?>");
+			jQuery.post(ajaxurl, data, function (response) {
+				reply = jQuery.parseJSON(response);
+				ids = reply.ids;
+				jQuery('#mfrh_progression').html(current + "/" + ids.length);
+				mfrh_process_next();
+			});
+		}
+	</script>
+	<?php
 }
 
-function mfrh_media_row_actions( $actions, $post ) {
-	$require_file_renaming = get_post_meta( $post->ID, '_require_file_renaming', true );
-	if ( $require_file_renaming ) {
-		$newaction['mfrh_rename_file'] = '<a href="?mfrh_rename=' . $post->ID . '" title="Rename files" rel="permalink">' . __( "Rename", 'media-file-renamer' ) . '</a>';
-		return array_merge( $actions, $newaction );
+/**
+ *
+ * BULK MEDIA RENAME PAGE
+ *
+ */
+
+ function mfrh_wp_ajax_mfrh_rename_media() {
+	$subaction = $_POST['subaction'];
+	
+	if ($subaction == 'getMediaIds') {
+		$all = intval( $_POST['all'] );
+		$ids = array();
+		$total = 0;
+		$media_query = new WP_Query( array( 'post_type' => 'attachment', 'post_status' => 'inherit', 'posts_per_page' => -1 ) );
+		foreach ($media_query->posts as $post) {
+			if ($all)
+				array_push( $ids, $post->ID );
+			else if ( get_post_meta( $post->ID, '_require_file_renaming', true ) )
+				array_push( $ids, $post->ID );
+			$total++;
+		}
+		$reply = array();
+		$reply['ids'] = $ids;
+		$reply['total'] = $total;
+		echo json_encode( $reply );
+		die;
 	}
-	return $actions;
+	else if ($subaction == 'renameMediaId') {
+		$id = intval( $_POST['id'] );
+		mfrh_attachment_fields_to_save( get_post( $id, ARRAY_A ), null );
+		echo 1;
+		die();
+	}
+	
+    echo 0;
+	die();
 }
+ 
+function mfrh_admin_menu() {
+	mfrh_file_counter( $flagged, $total );
+	$warning_count = $flagged;
+	$warning_title = "Flagged to be renamed";
+	$menu_label = sprintf( __( 'Rename files %s' ), "<span class='update-plugins count-$flagged' title='$warning_title'><span class='update-count'>" . number_format_i18n( $flagged ) . "</span></span>" );
+	add_media_page( 'Media File Renamer', $menu_label, 'manage_options', 'rename_media_files', 'mfrh_rename_media_files' ); 
+}
+
+function mfrh_file_counter( &$flagged, &$total ) {
+	$media_query = new WP_Query(
+		array(
+			'post_type' => 'attachment',
+			'post_status' => 'inherit',
+			'posts_per_page' => -1
+		)
+	);
+	static $calculated = false;
+	static $sflagged = 0;
+	static $stotal = 0;
+	if ( !$calculated ) {
+		foreach ($media_query->posts as $post) {
+			$require_file_renaming = get_post_meta( $post->ID, '_require_file_renaming', true );
+			$stotal++;
+			if ( $require_file_renaming )
+				$sflagged++;
+		}
+	}
+	$calculated = true;
+	$flagged = $sflagged;
+	$total = $stotal;
+}
+
+function mfrh_rename_media_files() {
+	
+	mfrh_file_counter( $flagged, $total );
+	
+	?>
+	<div class='wrap'>
+	<div id="icon-upload" class="icon32"><br></div>
+	<h2>Rename media files</h2>
+	<p>
+		<b>There are <span style='color: red;'><?php _e( $flagged ); ?></span> media files flagged for renaming out of <?php _e( $total ); ?> in total.</b> Those are the files that couldn't be renamed on the fly when their names were updated. You can now rename those flagged media, or rename all of them (which should actually done when you install the plugin for the first time). Please backup your WordPress upload folder and database before using these functions.
+	</p>
+	<a onclick='mfrh_rename_media(false)' id='mfrh_rename_dued_images' class='button-secondary'><?php _e( "Rename flagged media", 'media-file-renamer' ) ?></a>
+	<a onclick='mfrh_rename_media(true)' id='mfrh_rename_all_images' class='button-secondary'><?php _e( "Rename all media", 'media-file-renamer' ) ?></a>
+	<span id='mfrh_progression'></span>
+	</div>
+	<p>This plugin is actively developped and maintained by <a href='https://plus.google.com/106075761239802324012'>Jordy Meow</a>.<br />Please visit me at <a href='http://www.totorotimes.com'>Totoro Times</a>, a website about Japan, photography and abandoned places.<br />And thanks for linking us on <a href='https://www.facebook.com/totorotimes'>Facebook</a> and <a href='https://plus.google.com/106832157268594698217'>Google+</a> :)</p>
+	<?php
+}
+
+/**
+ *
+ * EDITOR - IS IT STILL REQUIRED? [TODO]
+ *
+ */
 
 function mfrh_media_send_to_editor($html, $attachment_id, $attachment) {
 	$post =& get_post($attachment_id);
@@ -52,13 +203,18 @@ function mfrh_media_send_to_editor($html, $attachment_id, $attachment) {
 	return $html;
 }
 
+/**
+ *
+ * RETURN AN UNIQUE FILENAME
+ *
+ */
+
 // This is a modified copy of 'wp_unique_filename' in functions.php
 function mfrh_unique_filename( $dir, $filename ) {
 	$number = 2;
 	$info = pathinfo($filename);
 	$ext = !empty($info['extension']) ? '.' . $info['extension'] : '';
 	while ( file_exists( $dir . "/$filename" ) ) {
-		
 		if ( $number == 2 )
 			$filename = str_replace( $ext, "-" . $number++ . $ext, $filename );
 		else {
@@ -67,6 +223,13 @@ function mfrh_unique_filename( $dir, $filename ) {
 	}
 	return $filename;
 }
+
+/**
+ *
+ * THE FUNCTION THAT MAKES COFFEE, BROWNIES AND GIVE MASSAGES ALL AT THE SAME TIME WITH NO COMPLAIN
+ * Rename Files + Update Posts
+ *
+ */
 
 function mfrh_attachment_fields_to_save( $post, $attachment ) {
 	// NEW MEDIA FILE INFO (depending on the title of the media)
