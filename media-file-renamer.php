@@ -3,7 +3,7 @@
 Plugin Name: Media File Renamer
 Plugin URI: http://www.meow.fr/media-file-renamer
 Description: Renames media files based on their titles and updates the associated posts links.
-Version: 0.5
+Version: 0.52
 Author: Jordy Meow
 Author URI: http://www.meow.fr
 Remarks: John Godley originaly developed rename-media (http://urbangiraffe.com/plugins/rename-media/), but it wasn't working on Windows, had issues with apostrophes, and was not updating the links in the posts. That's why Media File Renamer exists.
@@ -108,12 +108,18 @@ function mfrh_admin_head() {
 		$all = intval( $_POST['all'] );
 		$ids = array();
 		$total = 0;
-		$media_query = new WP_Query( array( 'post_type' => 'attachment', 'post_status' => 'inherit', 'posts_per_page' => -1 ) );
-		foreach ($media_query->posts as $post) {
+		global $wpdb;
+		$postids = $wpdb->get_col( $wpdb->prepare ( "
+			SELECT p.ID
+			FROM $wpdb->posts p
+			WHERE post_status = 'inherit'
+			AND post_type = 'attachment'
+		" ) );
+		foreach ( $postids as $id ) {
 			if ($all)
-				array_push( $ids, $post->ID );
-			else if ( get_post_meta( $post->ID, '_require_file_renaming', true ) )
-				array_push( $ids, $post->ID );
+				array_push( $ids, $id );
+			else if ( get_post_meta( $id, '_require_file_renaming', true ) )
+				array_push( $ids, $id );
 			$total++;
 		}
 		$reply = array();
@@ -142,19 +148,19 @@ function mfrh_admin_menu() {
 }
 
 function mfrh_file_counter( &$flagged, &$total ) {
-	$media_query = new WP_Query(
-		array(
-			'post_type' => 'attachment',
-			'post_status' => 'inherit',
-			'posts_per_page' => -1
-		)
-	);
+	global $wpdb;
+	$postids = $wpdb->get_col( $wpdb->prepare ( "
+		SELECT p.ID
+		FROM $wpdb->posts p
+		WHERE post_status = 'inherit'
+		AND post_type = 'attachment'
+	" ) );
 	static $calculated = false;
 	static $sflagged = 0;
 	static $stotal = 0;
 	if ( !$calculated ) {
-		foreach ($media_query->posts as $post) {
-			$require_file_renaming = get_post_meta( $post->ID, '_require_file_renaming', true );
+		foreach ( $postids as $id ) {
+			$require_file_renaming = get_post_meta( $id, '_require_file_renaming', true );
 			$stotal++;
 			if ( $require_file_renaming )
 				$sflagged++;
