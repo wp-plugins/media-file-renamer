@@ -3,7 +3,7 @@
 Plugin Name: Media File Renamer
 Plugin URI: http://www.meow.fr/media-file-renamer
 Description: Renames media files based on their titles and updates the associated posts links.
-Version: 0.52
+Version: 0.54
 Author: Jordy Meow
 Author URI: http://www.meow.fr
 Remarks: John Godley originaly developed rename-media (http://urbangiraffe.com/plugins/rename-media/), but it wasn't working on Windows, had issues with apostrophes, and was not updating the links in the posts. That's why Media File Renamer exists.
@@ -245,7 +245,7 @@ function mfrh_attachment_fields_to_save( $post, $attachment ) {
 	// Get attachment meta data
 	$meta = wp_get_attachment_metadata( $post['ID'] );
 	// Don't do anything if the media title didn't change or if it would turn to an empty string
-	if ( $post['post_name'] == $sanitized_media_title || empty( $sanitized_media_title ) || ( $meta["sanitized_title"] == $sanitized_media_title ) ) {
+	if ( $post['post_name'] == $sanitized_media_title || empty( $sanitized_media_title ) || ( isset( $meta["sanitized_title"] ) && $meta["sanitized_title"] == $sanitized_media_title ) ) {
 		// This media DOES NOT require renaming
 		delete_post_meta( $post['ID'], '_require_file_renaming' );
 		return $post; 
@@ -297,7 +297,10 @@ function mfrh_attachment_fields_to_save( $post, $attachment ) {
 	
 	// Update the attachment meta
 	$meta['file'] = str_replace( $noext_old_filename, $noext_new_filename, $meta['file'] );
-	$meta["url"] = str_replace( $noext_old_filename, $noext_new_filename, $meta["url"] );
+	if ( isset( $meta["url"] ) )
+		$meta["url"] = str_replace( $noext_old_filename, $noext_new_filename, $meta["url"] );
+	else
+		$meta["url"] = $noext_new_filename . "." . $ext;
 	$meta["sanitized_title"] = $sanitized_media_title;
 	
 	// Get the article to which belongs this media
@@ -373,6 +376,7 @@ function mfrh_attachment_fields_to_save( $post, $attachment ) {
 	//[TigrouMeow] The GUID should be updated, let's use the post id and the sanitized title.
 	//[alx359] That's not true for post_type=attachments|post_mime_type=image/*. The expected GUID here is [url]
 	//$post['guid'] = $sanitized_media_title . " [" . $post['ID'] . "]";
+	
 	$post['guid'] = $meta["url"];
 	wp_update_post( $post );
 	if ( !empty( $article ) ) {
