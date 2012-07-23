@@ -297,7 +297,7 @@ function mfrh_attachment_fields_to_save( $post, $attachment ) {
 	
 	// Update the attachment meta
 	$meta['file'] = str_replace( $noext_old_filename, $noext_new_filename, $meta['file'] );
-	if ( isset( $meta["url"] ) )
+	if ( isset( $meta["url"] ) && $meta["url"] != "" )
 		$meta["url"] = str_replace( $noext_old_filename, $noext_new_filename, $meta["url"] );
 	else
 		$meta["url"] = $noext_new_filename . "." . $ext;
