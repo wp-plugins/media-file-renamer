@@ -3,7 +3,7 @@
 Plugin Name: Media File Renamer
 Plugin URI: http://www.meow.fr/media-file-renamer
 Description: Renames media files based on their titles and updates the associated posts links.
-Version: 0.54
+Version: 0.6
 Author: Jordy Meow
 Author URI: http://www.meow.fr
 Remarks: John Godley originaly developed rename-media (http://urbangiraffe.com/plugins/rename-media/), but it wasn't working on Windows, had issues with apostrophes, and was not updating the links in the posts. That's why Media File Renamer exists.
@@ -76,6 +76,8 @@ function mfrh_admin_head() {
 					mfrh_process_next();
 				else
 					jQuery('#mfrh_progression').text("<?php echo __( "Done.", 'media-file-renamer' ); ?>");
+					jQuery('.mfrh-flagged').text("0");
+					jQuery('.mfrh-flagged-icon').html("");
 			});
 		}
 	
@@ -143,7 +145,7 @@ function mfrh_admin_menu() {
 	mfrh_file_counter( $flagged, $total );
 	$warning_count = $flagged;
 	$warning_title = "Flagged to be renamed";
-	$menu_label = sprintf( __( 'Rename files %s' ), "<span class='update-plugins count-$flagged' title='$warning_title'><span class='update-count'>" . number_format_i18n( $flagged ) . "</span></span>" );
+	$menu_label = sprintf( __( 'Rename files %s' ), "<span class='update-plugins count-$flagged mfrh-flagged-icon' title='$warning_title'><span class='update-count'>" . number_format_i18n( $flagged ) . "</span></span>" );
 	add_media_page( 'Media File Renamer', $menu_label, 'manage_options', 'rename_media_files', 'mfrh_rename_media_files' ); 
 }
 
@@ -180,13 +182,20 @@ function mfrh_rename_media_files() {
 	<div id="icon-upload" class="icon32"><br></div>
 	<h2>Rename media files</h2>
 	<p>
-		<b>There are <span style='color: red;'><?php _e( $flagged ); ?></span> media files flagged for renaming out of <?php _e( $total ); ?> in total.</b> Those are the files that couldn't be renamed on the fly when their names were updated. You can now rename those flagged media, or rename all of them (which should actually done when you install the plugin for the first time). Please backup your WordPress upload folder and database before using these functions.
+		<b>There are <span class='mfrh-flagged' style='color: red;'><?php _e( $flagged ); ?></span> media files flagged for renaming out of <?php _e( $total ); ?> in total.</b> Those are the files that couldn't be renamed on the fly when their names were updated. You can now rename those flagged media, or rename all of them (which should actually done when you install the plugin for the first time). <span style='color: red;'>Please backup your WordPress upload folder and database before using these functions.</span>
 	</p>
-	<a onclick='mfrh_rename_media(false)' id='mfrh_rename_dued_images' class='button-secondary'><?php _e( "Rename flagged media", 'media-file-renamer' ) ?></a>
-	<a onclick='mfrh_rename_media(true)' id='mfrh_rename_all_images' class='button-secondary'><?php _e( "Rename all media", 'media-file-renamer' ) ?></a>
+	<a onclick='mfrh_rename_media(false)' id='mfrh_rename_dued_images' class='button-secondary'>
+		<?php echo sprintf( __( "Rename <span class='mfrh-flagged'>%d</span> flagged media", 'media-file-renamer' ), $flagged ); ?>
+	</a>
+	<a onclick='mfrh_rename_media(true)' id='mfrh_rename_all_images' class='button-secondary' 
+		style='margin-left: 10px; margin-right: 10px'>
+		<?php echo sprintf( __( "Rename all %d media", 'media-file-renamer' ), $total ); ?>
+	</a>
 	<span id='mfrh_progression'></span>
 	</div>
-	<p>This plugin is actively developped and maintained by <a href='https://plus.google.com/106075761239802324012'>Jordy Meow</a>.<br />Please visit me at <a href='http://www.totorotimes.com'>Totoro Times</a>, a website about Japan, photography and abandoned places.<br />And thanks for linking us on <a href='https://www.facebook.com/totorotimes'>Facebook</a> and <a href='https://plus.google.com/106832157268594698217'>Google+</a> :)</p>
+	<div style='font-size: 14px; color: #777; border-top: 1px solid #DFDFDF; margin-top: 40px;'>
+		<p>This plugin is actively developped and maintained by <a href='https://plus.google.com/106075761239802324012'>Jordy Meow</a>.<br />Please visit me at <a href='http://www.totorotimes.com'>Totoro Times</a>, a website about Japan, photography and abandoned places.<br />And thanks for linking us on <a href='https://www.facebook.com/totorotimes'>Facebook</a> and <a href='https://plus.google.com/106832157268594698217'>Google+</a> :)</p>
+	</div>
 	<?php
 }
 
