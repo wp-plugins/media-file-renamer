@@ -3,7 +3,7 @@
 Plugin Name: Media File Renamer
 Plugin URI: http://www.meow.fr/media-file-renamer
 Description: Renames media files based on their titles and updates the associated posts links.
-Version: 0.6
+Version: 0.8
 Author: Jordy Meow
 Author URI: http://www.meow.fr
 Remarks: John Godley originaly developed rename-media (http://urbangiraffe.com/plugins/rename-media/), but it wasn't working on Windows, had issues with apostrophes, and was not updating the links in the posts. That's why Media File Renamer exists.
@@ -18,13 +18,18 @@ Originally developed for two of my websites:
 */
 
 add_filter( 'attachment_fields_to_save', 'mfrh_attachment_fields_to_save', 1, 2 );
-add_filter( 'media_send_to_editor', 'mfrh_media_send_to_editor', 20, 3 );
 add_action( 'media_row_actions', 'mfrh_media_row_actions', 10, 2 );
 add_action( 'admin_head', 'mfrh_admin_head' );
 add_action( 'admin_menu', 'mfrh_admin_menu' );
 add_action( 'wp_ajax_mfrh_rename_media', 'mfrh_wp_ajax_mfrh_rename_media' );
 add_filter( 'views_upload', 'mfrh_views_upload' );
 add_action( 'pre_get_posts', 'mfrh_pre_get_posts' );
+
+// This was used for ON THE FLY RENAME while editing a post and an image at the same time
+// Too dangerous :)
+//add_filter( 'media_send_to_editor', 'mfrh_media_send_to_editor', 20, 3 );
+
+require( 'jordy_meow_footer.php' );
 
 /**
  *
@@ -49,7 +54,7 @@ function mfrh_views_upload( $views ) {
  function mfrh_media_row_actions( $actions, $post ) {
 	$require_file_renaming = get_post_meta( $post->ID, '_require_file_renaming', true );
 	if ( $require_file_renaming ) {
-		$newaction['mfrh_rename_file'] = '<a href="?mfrh_rename=' . $post->ID . '" title="Rename files" rel="permalink">' . __( "Rename files", 'media-file-renamer' ) . '</a>';
+		$newaction['mfrh_rename_file'] = '<a href="?mfrh_rename=' . $post->ID . '" title="File Renamer" rel="permalink">' . __( "File Renamer", 'media-file-renamer' ) . '</a>';
 		return array_merge( $actions, $newaction );
 	}
 	return $actions;
@@ -116,7 +121,7 @@ function mfrh_admin_head() {
 			FROM $wpdb->posts p
 			WHERE post_status = 'inherit'
 			AND post_type = 'attachment'
-		" ) );
+		", 0, 0 ) );
 		foreach ( $postids as $id ) {
 			if ($all)
 				array_push( $ids, $id );
@@ -145,22 +150,22 @@ function mfrh_admin_menu() {
 	mfrh_file_counter( $flagged, $total );
 	$warning_count = $flagged;
 	$warning_title = "Flagged to be renamed";
-	$menu_label = sprintf( __( 'Rename files %s' ), "<span class='update-plugins count-$flagged mfrh-flagged-icon' title='$warning_title'><span class='update-count'>" . number_format_i18n( $flagged ) . "</span></span>" );
+	$menu_label = sprintf( __( 'File Renamer %s' ), "<span class='update-plugins count-$flagged mfrh-flagged-icon' title='$warning_title'><span class='update-count'>" . number_format_i18n( $flagged ) . "</span></span>" );
 	add_media_page( 'Media File Renamer', $menu_label, 'manage_options', 'rename_media_files', 'mfrh_rename_media_files' ); 
 }
 
-function mfrh_file_counter( &$flagged, &$total ) {
+function mfrh_file_counter( &$flagged, &$total, $force = false ) {
 	global $wpdb;
 	$postids = $wpdb->get_col( $wpdb->prepare ( "
 		SELECT p.ID
 		FROM $wpdb->posts p
 		WHERE post_status = 'inherit'
 		AND post_type = 'attachment'
-	" ) );
+	", 0, 0 ) );
 	static $calculated = false;
 	static $sflagged = 0;
 	static $stotal = 0;
-	if ( !$calculated ) {
+	if ( !$calculated || $force ) {
 		foreach ( $postids as $id ) {
 			$require_file_renaming = get_post_meta( $id, '_require_file_renaming', true );
 			$stotal++;
@@ -173,38 +178,90 @@ function mfrh_file_counter( &$flagged, &$total ) {
 	$total = $stotal;
 }
 
+function mfrh_check_text() {
+	global $wpdb;
+	$ids = $wpdb->get_col( $wpdb->prepare ( "
+		SELECT p.ID
+		FROM $wpdb->posts p
+		WHERE post_status = 'inherit'
+		AND post_type = 'attachment'
+	", 0, 0 ) );
+	echo "<div style='font-size: 11px; margin-top: 15px;'>";
+	foreach ( $ids as $id ) {
+		$post = get_post( $id, ARRAY_A );
+		$meta = wp_get_attachment_metadata( $post['ID'] );
+		$sanitized_media_title = sanitize_title( $post['post_title'] );
+		$old_filepath = get_attached_file( $post['ID'] );
+		$path_parts = pathinfo( $old_filepath );
+		
+		// Don't do anything if the media title didn't change or if it would turn to an empty string
+		if ( $post['post_name'] == $sanitized_media_title || 
+			empty( $sanitized_media_title ) || ( isset( $meta["sanitized_title"] ) 
+			&& $meta["sanitized_title"] === $sanitized_media_title ) ) {
+			// This media DOES NOT require renaming
+		}
+		else {
+			if ( !get_post_meta( $post['ID'], '_require_file_renaming' ) )
+				add_post_meta( $post['ID'], '_require_file_renaming', true );
+			echo "post_title: " . $post['post_title'] . "<br />";
+			echo "sanitized_media_title: " . $sanitized_media_title . "<br />";
+			echo "post_name: " . $post['post_name'] . "<br />";
+			echo "sanitized_title: " . ( isset( $meta['sanitized_title'] ) ? $meta['sanitized_title'] : "-"  ) . "<br />";
+			echo "filename: " . $path_parts['filename'] . "<br />";
+			echo "<b>File needs to be renamed.</b><br />";
+			echo "<br />";
+		}
+	}
+	echo "Scanning done.";
+	echo "</div>";
+}
+
 function mfrh_rename_media_files() {
-	
-	mfrh_file_counter( $flagged, $total );
-	
 	?>
 	<div class='wrap'>
 	<div id="icon-upload" class="icon32"><br></div>
-	<h2>Rename media files</h2>
+	<h2>Media File Renamer &#8226; Dashboard</h2>
+	
+	<?php
+	if ( isset( $_GET ) && isset( $_GET['check'] ) )
+		mfrh_check_text();
+	
+	mfrh_file_counter( $flagged, $total, true );
+	?>
 	<p>
 		<b>There are <span class='mfrh-flagged' style='color: red;'><?php _e( $flagged ); ?></span> media files flagged for renaming out of <?php _e( $total ); ?> in total.</b> Those are the files that couldn't be renamed on the fly when their names were updated. You can now rename those flagged media, or rename all of them (which should actually done when you install the plugin for the first time). <span style='color: red;'>Please backup your WordPress upload folder and database before using these functions.</span>
 	</p>
-	<a onclick='mfrh_rename_media(false)' id='mfrh_rename_dued_images' class='button-secondary'>
-		<?php echo sprintf( __( "Rename <span class='mfrh-flagged'>%d</span> flagged media", 'media-file-renamer' ), $flagged ); ?>
-	</a>
-	<a onclick='mfrh_rename_media(true)' id='mfrh_rename_all_images' class='button-secondary' 
+	<? if ($flagged > 0): ?>
+		<a onclick='mfrh_rename_media(false)' id='mfrh_rename_dued_images' class='button-primary'>
+			<?php echo sprintf( __( "Rename <span class='mfrh-flagged'>%d</span> flagged media", 'media-file-renamer' ), $flagged ); ?>
+		</a>
+	<?php else: ?>
+		<a id='mfrh_rename_dued_images' class='button-primary'>
+			<?php echo sprintf( __( "Rename <span class='mfrh-flagged'>%d</span> flagged media", 'media-file-renamer' ), $flagged ); ?>
+		</a>
+	<?php endif; ?>
+	
+	<a onclick='mfrh_rename_media(true)' id='mfrh_rename_all_images' class='button-primary' 
 		style='margin-left: 10px; margin-right: 10px'>
 		<?php echo sprintf( __( "Rename all %d media", 'media-file-renamer' ), $total ); ?>
 	</a>
 	<span id='mfrh_progression'></span>
-	</div>
-	<div style='font-size: 14px; color: #777; border-top: 1px solid #DFDFDF; margin-top: 40px;'>
-		<p>This plugin is actively developped and maintained by <a href='https://plus.google.com/106075761239802324012'>Jordy Meow</a>.<br />Please visit me at <a href='http://www.totorotimes.com'>Totoro Times</a>, a website about Japan, photography and abandoned places.<br />And thanks for linking us on <a href='https://www.facebook.com/totorotimes'>Facebook</a> and <a href='https://plus.google.com/106832157268594698217'>Google+</a> :)</p>
+	<a id='mfrh_rename_all_images' class='button-secondary' href="?page=rename_media_files&check"
+		style='float:right; margin-left: 10px; margin-right: 10px'>
+		<?php echo sprintf( __( "Check Test", 'media-file-renamer' ), $total ); ?>
+	</a>
 	</div>
 	<?php
+	jordy_meow_footer();
 }
 
 /**
  *
- * EDITOR - IS IT STILL REQUIRED? [TODO]
+ * EDITOR
  *
  */
 
+ /*
 function mfrh_media_send_to_editor($html, $attachment_id, $attachment) {
 	$post =& get_post($attachment_id);
 	if ( substr($post->post_mime_type, 0, 5) == 'image' ) {
@@ -217,6 +274,7 @@ function mfrh_media_send_to_editor($html, $attachment_id, $attachment) {
 	}
 	return $html;
 }
+*/
 
 /**
  *
@@ -247,12 +305,14 @@ function mfrh_unique_filename( $dir, $filename ) {
  */
 
 function mfrh_attachment_fields_to_save( $post, $attachment ) {
+
 	// NEW MEDIA FILE INFO (depending on the title of the media)
 	$sanitized_media_title = sanitize_title( $post['post_title'] );
 	
 	// MEDIA TITLE
 	// Get attachment meta data
 	$meta = wp_get_attachment_metadata( $post['ID'] );
+
 	// Don't do anything if the media title didn't change or if it would turn to an empty string
 	if ( $post['post_name'] == $sanitized_media_title || empty( $sanitized_media_title ) || ( isset( $meta["sanitized_title"] ) && $meta["sanitized_title"] == $sanitized_media_title ) ) {
 		// This media DOES NOT require renaming
@@ -278,7 +338,7 @@ function mfrh_attachment_fields_to_save( $post, $attachment ) {
 		return $post;
 	}
 	
-	// LET'S RENAME
+	// RENAMING
 	$new_filename = strtolower( mfrh_unique_filename( $directory, $sanitized_media_title . '.' . $ext ) );
 	$new_filepath = trailingslashit( $directory ) . $new_filename ; // '/' should be used EVEN on a Windows based server
 	// If the new file already exists, it's a weird case, let's do nothing.
@@ -312,90 +372,85 @@ function mfrh_attachment_fields_to_save( $post, $attachment ) {
 		$meta["url"] = $noext_new_filename . "." . $ext;
 	$meta["sanitized_title"] = $sanitized_media_title;
 	
-	// Get the article to which belongs this media
-	$article = "";
-	if (!empty($post['post_parent']) ) {
-		$article = get_post( $post['post_parent'] );
-		$article->post_content = str_replace( $old_filename, $new_filename, $article->post_content );
-		
-		// WPML: Modify the translations posts as well [THIS IS A COPY PASTE OF A PREVIOUS BLOCK]
-		if ( function_exists( 'icl_object_id' ) ) {
-			$languages = icl_get_languages( 'skip_missing=0' );
-			foreach ( $languages as $language ) {
-				$id = icl_object_id( $post['post_parent'], 'post', true, $language['language_code'] );
-				if ( !is_null( $id ) ) {
-					$wpml_post = get_post( $id );
-					$wpml_post->post_content = str_replace( $old_filename, $new_filename, $wpml_post->post_content );
-					wp_update_post( $wpml_post );
-				}
-			}
-		}
-	}
-	
-	// Loop through the different sizes in the case of an image, and rename them.
-	// Also change the article links if there are any
-	foreach ( $meta['sizes'] as $size => $meta_size ) {
-		$meta_old_filename = $meta['sizes'][$size]['file'];
-		$meta_old_filepath = trailingslashit( $directory ) . $meta_old_filename;
-		$meta_new_filename = str_replace( $noext_old_filename, $noext_new_filename, $meta_old_filename );
-		$meta_new_filepath = trailingslashit( $directory ) . $meta_new_filename;
-		
-		// ak: Double check files exist before trying to rename.
-		if ( file_exists( $meta_old_filepath ) && ( (!file_exists( $meta_new_filepath ) ) || is_writable( $meta_new_filepath ) ) ) {
-		
-			// WP Retina 2x is detected, let's rename those files as well
-			if ( function_exists( 'wr2x_generate_images' ) ) {
-				$wr2x_old_filepath = str_replace( '.' . $ext, '@2x.' . $ext, $meta_old_filepath );
-				$wr2x_new_filepath = str_replace( '.' . $ext, '@2x.' . $ext, $meta_new_filepath );
-				if ( file_exists( $wr2x_old_filepath ) && ( (!file_exists( $wr2x_new_filepath ) ) || is_writable( $wr2x_new_filepath ) ) ) {
-					rename( $wr2x_old_filepath, $wr2x_new_filepath );
-				}
-			}
-		
-			rename( $meta_old_filepath, $meta_new_filepath );
-			$meta['sizes'][$size]['file'] = $meta_new_filename;
-		}
-		
-		if ( !empty( $article ) ) {
-			$article->post_content = str_replace( $meta_old_filename, $meta_new_filename, $article->post_content );
+	// Images
+	if ( wp_attachment_is_image( $post['ID'] ) ) {
+		// Loop through the different sizes in the case of an image, and rename them.
+		$orig_image_urls = array();
+		$orig_image_data = wp_get_attachment_image_src( $post['ID'], 'full' );
+		$orig_image_urls['full'] = $orig_image_data[0];
+		foreach ( $meta['sizes'] as $size => $meta_size ) {
+			$meta_old_filename = $meta['sizes'][$size]['file'];
+			$meta_old_filepath = trailingslashit( $directory ) . $meta_old_filename;
+			$meta_new_filename = str_replace( $noext_old_filename, $noext_new_filename, $meta_old_filename );
+			$meta_new_filepath = trailingslashit( $directory ) . $meta_new_filename;
+			$orig_image_data = wp_get_attachment_image_src( $post['ID'], $size );
+			$orig_image_urls[$size] = $orig_image_data[0];
 			
-			// WPML: Modify the translations posts as well [THIS IS A COPY PASTE OF A PREVIOUS BLOCK]
-			if ( function_exists( 'icl_object_id' ) ) {
-				$languages = icl_get_languages( 'skip_missing=0' );
-				foreach ( $languages as $language ) {
-					$id = icl_object_id( $post['post_parent'], 'post', true, $language['language_code'] );
-					if ( !is_null( $id ) ) {
-						$wpml_post = get_post( $id );
-						$wpml_post->post_content = str_replace( $meta_old_filename, $meta_new_filename, $wpml_post->post_content );
-						wp_update_post( $wpml_post );
+			// ak: Double check files exist before trying to rename.
+			if ( file_exists( $meta_old_filepath ) && ( (!file_exists( $meta_new_filepath ) ) 
+				|| is_writable( $meta_new_filepath ) ) ) {
+			
+				// WP Retina 2x is detected, let's rename those files as well
+				if ( function_exists( 'wr2x_generate_images' ) ) {
+					$wr2x_old_filepath = str_replace( '.' . $ext, '@2x.' . $ext, $meta_old_filepath );
+					$wr2x_new_filepath = str_replace( '.' . $ext, '@2x.' . $ext, $meta_new_filepath );
+					if ( file_exists( $wr2x_old_filepath ) && ( (!file_exists( $wr2x_new_filepath ) ) || is_writable( $wr2x_new_filepath ) ) ) {
+						rename( $wr2x_old_filepath, $wr2x_new_filepath );
 					}
 				}
+				rename( $meta_old_filepath, $meta_new_filepath );
+				$meta['sizes'][$size]['file'] = $meta_new_filename;
 			}
 		}
+	} else {
+		$orig_attachment_url = wp_get_attachment_url( $post['ID'] );
 	}
 	
-	// This media DOES NOT require renaming
+	// This media DOES NOT require renaming anymore
 	delete_post_meta( $post['ID'], '_require_file_renaming' );
 	
+	// Update metadata
 	wp_update_attachment_metadata( $post['ID'], $meta );
 	update_attached_file( $post['ID'], $new_filepath );
-
+	
 	// Posts should be updated.
 	$post['post_name'] = $sanitized_media_title;
 	//[TigrouMeow] The GUID should be updated, let's use the post id and the sanitized title.
 	//[alx359] That's not true for post_type=attachments|post_mime_type=image/*. The expected GUID here is [url]
 	//$post['guid'] = $sanitized_media_title . " [" . $post['ID'] . "]";
-	
 	$post['guid'] = $meta["url"];
 	wp_update_post( $post );
 	if ( !empty( $article ) ) {
 		wp_update_post( $article );
 	}
 	
+	// Mass update of all the articles with the new filenames
+	// For images, we have to go through all the sizes
+	global $wpdb;
+	if ( wp_attachment_is_image( $post['ID'] ) ) {
+		$orig_image_url = $orig_image_urls['full'];
+		$new_image_data = wp_get_attachment_image_src( $post['ID'], 'full' );
+		$new_image_url = $new_image_data[0];
+		echo "UPDATE $wpdb->posts SET post_content = REPLACE(post_content, 
+			'$orig_image_url', '$new_image_url');";
+		$wpdb->query( $wpdb->prepare( "UPDATE $wpdb->posts SET post_content = REPLACE(post_content, 
+			'$orig_image_url', '$new_image_url');", 0 ) );
+		foreach ( $meta['sizes'] as $size => $meta_size ) {
+			$orig_image_url = $orig_image_urls[$size];
+			$new_image_data = wp_get_attachment_image_src( $post['ID'], $size );
+			$new_image_url = $new_image_data[0];
+			$wpdb->query( $wpdb->prepare( "UPDATE $wpdb->posts SET post_content = REPLACE(post_content, 
+				'$orig_image_url', '$new_image_url');", 0 ) );
+		}
+	} else {
+		$new_attachment_url = wp_get_attachment_url( $post['ID'] );
+		$wpdb->query( $wpdb->prepare( "UPDATE $wpdb->posts SET post_content = REPLACE(post_content, '$orig_attachment_url', '$new_attachment_url');", 0 ) );
+	}
+	
 	// HTTP REFERER set to the new media link
 	if ( isset( $_REQUEST['_wp_original_http_referer'] ) && strpos( $_REQUEST['_wp_original_http_referer'], '/wp-admin/' ) === false ) {
 		$_REQUEST['_wp_original_http_referer'] = get_permalink( $post['ID'] );
 	}
-	
+
 	return $post;
 }
