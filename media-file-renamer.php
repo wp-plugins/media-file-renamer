@@ -3,7 +3,7 @@
 Plugin Name: Media File Renamer
 Plugin URI: http://www.meow.fr/media-file-renamer
 Description: Renames media files based on their titles and updates the associated posts links.
-Version: 0.8
+Version: 0.9
 Author: Jordy Meow
 Author URI: http://www.meow.fr
 Remarks: John Godley originaly developed rename-media (http://urbangiraffe.com/plugins/rename-media/), but it wasn't working on Windows, had issues with apostrophes, and was not updating the links in the posts. That's why Media File Renamer exists.
@@ -17,19 +17,24 @@ Originally developed for two of my websites:
 - Haikyo (http://www.haikyo.org)
 */
 
-add_filter( 'attachment_fields_to_save', 'mfrh_attachment_fields_to_save', 1, 2 );
+
 add_action( 'media_row_actions', 'mfrh_media_row_actions', 10, 2 );
 add_action( 'admin_head', 'mfrh_admin_head' );
 add_action( 'admin_menu', 'mfrh_admin_menu' );
 add_action( 'wp_ajax_mfrh_rename_media', 'mfrh_wp_ajax_mfrh_rename_media' );
 add_filter( 'views_upload', 'mfrh_views_upload' );
 add_action( 'pre_get_posts', 'mfrh_pre_get_posts' );
+add_filter( 'media_send_to_editor', 'mfrh_media_send_to_editor', 20, 3 );
 
-// This was used for ON THE FLY RENAME while editing a post and an image at the same time
-// Too dangerous :)
-//add_filter( 'media_send_to_editor', 'mfrh_media_send_to_editor', 20, 3 );
+// Attachment is saved (can be automatic, when the user switch between fields)
+add_action( 'edit_attachment', 'mfrh_edit_attachment' );
+add_action( 'add_attachment', 'mfrh_edit_attachment' );
+
+// Media form is submitted
+add_filter( 'attachment_fields_to_save', 'mfrh_attachment_fields_to_save', 1, 2 );
 
 require( 'jordy_meow_footer.php' );
+require( 'mfrh_settings.php' );
 
 /**
  *
@@ -152,6 +157,7 @@ function mfrh_admin_menu() {
 	$warning_title = "Flagged to be renamed";
 	$menu_label = sprintf( __( 'File Renamer %s' ), "<span class='update-plugins count-$flagged mfrh-flagged-icon' title='$warning_title'><span class='update-count'>" . number_format_i18n( $flagged ) . "</span></span>" );
 	add_media_page( 'Media File Renamer', $menu_label, 'manage_options', 'rename_media_files', 'mfrh_rename_media_files' ); 
+	add_options_page( 'Media File Renamer', 'File Renamer', 'manage_options', 'mfrh_settings', 'mfrh_settings_page' );
 }
 
 function mfrh_file_counter( &$flagged, &$total, $force = false ) {
@@ -166,6 +172,8 @@ function mfrh_file_counter( &$flagged, &$total, $force = false ) {
 	static $sflagged = 0;
 	static $stotal = 0;
 	if ( !$calculated || $force ) {
+		$stotal = 0;
+		$sflagged = 0;
 		foreach ( $postids as $id ) {
 			$require_file_renaming = get_post_meta( $id, '_require_file_renaming', true );
 			$stotal++;
@@ -178,6 +186,37 @@ function mfrh_file_counter( &$flagged, &$total, $force = false ) {
 	$total = $stotal;
 }
 
+function mfrh_check_attachment( $id, $output = false ) {
+	$post = get_post( $id, ARRAY_A );
+	$meta = wp_get_attachment_metadata( $post['ID'] );
+	$sanitized_media_title = sanitize_title( $post['post_title'] );
+	$old_filepath = get_attached_file( $post['ID'] );
+	$path_parts = pathinfo( $old_filepath );
+	
+	// Don't do anything if the media title didn't change or if it would turn to an empty string
+	if ( empty( $sanitized_media_title ) || ( isset( $meta["sanitized_title"] ) 
+		&& $meta["sanitized_title"] === $sanitized_media_title ) ) {
+		return false;
+	}
+	else if ( !isset( $meta['sanitized_title'] ) && $post['post_title'] == $path_parts['filename'] ) {
+		$meta['sanitized_title'] = $sanitized_media_title;
+		wp_update_attachment_metadata( $post['ID'], $meta );
+	}
+	else {
+		if ( !get_post_meta( $post['ID'], '_require_file_renaming' ) )
+			add_post_meta( $post['ID'], '_require_file_renaming', true );
+		if ($output) {
+			echo "post_title: " . $post['post_title'] . "<br />";
+			echo "sanitized_media_title: " . $sanitized_media_title . "<br />";
+			echo "sanitized_title: " . ( isset( $meta['sanitized_title'] ) ? $meta['sanitized_title'] : "-"  ) . "<br />";
+			echo "filename: " . $path_parts['filename'] . "<br />";
+			echo "<b>File needs to be renamed.</b><br />";
+			echo "<br />";
+		}
+	}
+	return true;
+}
+
 function mfrh_check_text() {
 	global $wpdb;
 	$ids = $wpdb->get_col( $wpdb->prepare ( "
@@ -187,31 +226,8 @@ function mfrh_check_text() {
 		AND post_type = 'attachment'
 	", 0, 0 ) );
 	echo "<div style='font-size: 11px; margin-top: 15px;'>";
-	foreach ( $ids as $id ) {
-		$post = get_post( $id, ARRAY_A );
-		$meta = wp_get_attachment_metadata( $post['ID'] );
-		$sanitized_media_title = sanitize_title( $post['post_title'] );
-		$old_filepath = get_attached_file( $post['ID'] );
-		$path_parts = pathinfo( $old_filepath );
-		
-		// Don't do anything if the media title didn't change or if it would turn to an empty string
-		if ( $post['post_name'] == $sanitized_media_title || 
-			empty( $sanitized_media_title ) || ( isset( $meta["sanitized_title"] ) 
-			&& $meta["sanitized_title"] === $sanitized_media_title ) ) {
-			// This media DOES NOT require renaming
-		}
-		else {
-			if ( !get_post_meta( $post['ID'], '_require_file_renaming' ) )
-				add_post_meta( $post['ID'], '_require_file_renaming', true );
-			echo "post_title: " . $post['post_title'] . "<br />";
-			echo "sanitized_media_title: " . $sanitized_media_title . "<br />";
-			echo "post_name: " . $post['post_name'] . "<br />";
-			echo "sanitized_title: " . ( isset( $meta['sanitized_title'] ) ? $meta['sanitized_title'] : "-"  ) . "<br />";
-			echo "filename: " . $path_parts['filename'] . "<br />";
-			echo "<b>File needs to be renamed.</b><br />";
-			echo "<br />";
-		}
-	}
+	foreach ( $ids as $id )
+		mfrh_check_attachment( $id, true );
 	echo "Scanning done.";
 	echo "</div>";
 }
@@ -261,20 +277,14 @@ function mfrh_rename_media_files() {
  *
  */
 
- /*
-function mfrh_media_send_to_editor($html, $attachment_id, $attachment) {
-	$post =& get_post($attachment_id);
-	if ( substr($post->post_mime_type, 0, 5) == 'image' ) {
-		$url = wp_get_attachment_url($attachment_id);
-		$align = !empty($attachment['align']) ? $attachment['align'] : 'none';
-		$size = !empty($attachment['image-size']) ? $attachment['image-size'] : 'medium';
-		$alt = !empty($attachment['image_alt']) ? $attachment['image_alt'] : '';
-		$rel = ( $url == get_attachment_link($attachment_id) );
-		return get_image_send_to_editor($attachment_id, $attachment['post_excerpt'], $attachment['post_title'], $align, $url, $rel, $size, $alt);
-	}
+function mfrh_edit_attachment( $post_ID ) {
+	mfrh_check_attachment( $post_ID );
+}
+ 
+function mfrh_media_send_to_editor( $html, $attachment_id, $attachment ) {
+	mfrh_check_attachment( $attachment_id );
 	return $html;
 }
-*/
 
 /**
  *
@@ -309,20 +319,24 @@ function mfrh_attachment_fields_to_save( $post, $attachment ) {
 	// NEW MEDIA FILE INFO (depending on the title of the media)
 	$sanitized_media_title = sanitize_title( $post['post_title'] );
 	
-	// MEDIA TITLE
-	// Get attachment meta data
+	// MEDIA TITLE & FILE PARTS
 	$meta = wp_get_attachment_metadata( $post['ID'] );
+	$old_filepath = get_attached_file( $post['ID'] ); // '2011/01/whatever.jpeg'
+	$path_parts = pathinfo( $old_filepath );
 
 	// Don't do anything if the media title didn't change or if it would turn to an empty string
-	if ( $post['post_name'] == $sanitized_media_title || empty( $sanitized_media_title ) || ( isset( $meta["sanitized_title"] ) && $meta["sanitized_title"] == $sanitized_media_title ) ) {
+	if ( empty( $sanitized_media_title ) || ( isset( $meta["sanitized_title"] ) && $meta["sanitized_title"] == $sanitized_media_title ) ) {
 		// This media DOES NOT require renaming
 		delete_post_meta( $post['ID'], '_require_file_renaming' );
 		return $post; 
 	}
+	// Update the metadata if the file is already nice
+	else if ( !isset( $meta['sanitized_title'] ) && $post['post_title'] == $path_parts['filename'] ) {
+		$meta['sanitized_title'] = $sanitized_media_title;
+		wp_update_attachment_metadata( $post['ID'], $meta );
+	}
 	
 	// PREVIOUS MEDIA FILE INFO
-	$old_filepath = get_attached_file( $post['ID'] ); // '2011/01/whatever.jpeg'
-	$path_parts = pathinfo( $old_filepath );
 	$directory = $path_parts['dirname']; // '2011/01'
 	$old_filename = $path_parts['basename']; // 'whatever.jpeg'
 	$ext = str_replace( 'jpeg', 'jpg', $path_parts['extension'] ); // In case of a jpeg extension, rename it to jpg
@@ -413,8 +427,10 @@ function mfrh_attachment_fields_to_save( $post, $attachment ) {
 	wp_update_attachment_metadata( $post['ID'], $meta );
 	update_attached_file( $post['ID'], $new_filepath );
 	
-	// Posts should be updated.
-	$post['post_name'] = $sanitized_media_title;
+	// Slug update
+	if ( mfrh_getoption( "rename_slug", "mfrh_basics", 'media-file-renamer' ) === 'on' )
+		$post['post_name'] = $sanitized_media_title;
+	
 	//[TigrouMeow] The GUID should be updated, let's use the post id and the sanitized title.
 	//[alx359] That's not true for post_type=attachments|post_mime_type=image/*. The expected GUID here is [url]
 	//$post['guid'] = $sanitized_media_title . " [" . $post['ID'] . "]";
