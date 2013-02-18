@@ -3,7 +3,7 @@
 Plugin Name: Media File Renamer
 Plugin URI: http://www.meow.fr/media-file-renamer
 Description: Renames media files based on their titles and updates the associated posts links.
-Version: 0.9.2
+Version: 0.9.3
 Author: Jordy Meow
 Author URI: http://www.meow.fr
 Remarks: John Godley originaly developed rename-media (http://urbangiraffe.com/plugins/rename-media/), but it wasn't working on Windows, had issues with apostrophes, and was not updating the links in the posts. That's why Media File Renamer exists.
@@ -25,16 +25,51 @@ add_action( 'wp_ajax_mfrh_rename_media', 'mfrh_wp_ajax_mfrh_rename_media' );
 add_filter( 'views_upload', 'mfrh_views_upload' );
 add_action( 'pre_get_posts', 'mfrh_pre_get_posts' );
 add_filter( 'media_send_to_editor', 'mfrh_media_send_to_editor', 20, 3 );
+add_action( 'admin_notices', 'mfrh_admin_notices' );
+
+// Column for Media Library
+add_filter( 'manage_media_columns', 'mfrh_add_media_columns');
+add_action( 'manage_media_custom_column', 'mfrh_manage_media_custom_column', 10, 2 );
 
 // Attachment is saved (can be automatic, when the user switch between fields)
 add_action( 'edit_attachment', 'mfrh_edit_attachment' );
 add_action( 'add_attachment', 'mfrh_edit_attachment' );
 
 // Media form is submitted
-add_filter( 'attachment_fields_to_save', 'mfrh_attachment_fields_to_save', 1, 2 );
+add_filter( 'attachment_fields_to_save', 'mfrh_rename_media', 1, 2 );
 
 require( 'jordy_meow_footer.php' );
 require( 'mfrh_settings.php' );
+
+/**
+ *
+ * ERROR/INFO MESSAGE HANDLING
+ *
+ */
+
+function mfrh_admin_notices() {
+	//The class "updated" will display the message with a yellow background.
+	//The class "error" will display the message with a red background.
+
+	global $pagenow;
+
+	if (is_admin()) {
+		$screen = get_current_screen();
+		if ( $screen->base == 'post' && $screen->post_type == 'attachment' ) {
+			if ( mfrh_check_attachment( $_GET['post'], $output ) ) {
+
+				if ($output['desired_filename_exists']) {
+					echo '<div class="error">
+	       				<p>
+	       					The file ' . $output['desired_filename'] . ' already exists. Please give
+	       					a new title for this media.
+	       				</p>
+	    			</div>';
+				}
+			}
+    	}
+	}
+}
 
 /**
  *
@@ -55,12 +90,35 @@ function mfrh_views_upload( $views ) {
 	$views['mfrh_flagged'] = sprintf("<a href='upload.php?renameflag=1'>%s</a> (%d)", __("To be renamed", 'media-file-renamer'), $flagged);
     return $views;
 }
- 
- function mfrh_media_row_actions( $actions, $post ) {
+
+function mfrh_add_media_columns($columns) {
+    $columns['mfrh_column'] = 'Renamer';
+    return $columns;
+}
+
+function mfrh_manage_media_custom_column( $column_name, $id ) {
+    if ( $column_name == 'mfrh_column' ) {
+		if ( mfrh_check_attachment( $id, $output ) ) {
+			if ( $output['desired_filename_exists'] )
+				echo "<b>Another media with the same title exists. This media's title needs to be <span style='color: red;'>modified</span>.</b><br />";
+			else
+				echo "<b>This media</a> is ready to be renamed. <a href='?renameflag=1&mfrh_rename=" . $id . "'>Rename now.</b><br />";
+			echo "<br />";
+			echo "Current file: " . $output['current_filename'] . "<br />";
+			echo "Desired file: " . $output['desired_filename'] . "<br />";
+		} else {
+			echo "<img style='margin-top: -2px; margin-bottom: 2px; width: 16px; height: 16px;' src='" . trailingslashit( WP_PLUGIN_URL ) . trailingslashit( 'media-file-renamer/img') . "tick-circle.png' />";
+		}
+    }
+}
+
+function mfrh_media_row_actions( $actions, $post ) {
 	$require_file_renaming = get_post_meta( $post->ID, '_require_file_renaming', true );
 	if ( $require_file_renaming ) {
-		$newaction['mfrh_rename_file'] = '<a href="?mfrh_rename=' . $post->ID . '" title="File Renamer" rel="permalink">' . __( "File Renamer", 'media-file-renamer' ) . '</a>';
-		return array_merge( $actions, $newaction );
+		if ( mfrh_check_attachment( $post->ID, $output ) && !$output['desired_filename_exists'] ) {
+			$newaction['mfrh_rename_file'] = '<a href="?mfrh_rename=' . $post->ID . '" title="Rename" rel="permalink">' . __( "Rename", 'media-file-renamer' ) . '</a>';
+			return array_merge( $actions, $newaction );
+		}
 	}
 	return $actions;
 }
@@ -68,7 +126,7 @@ function mfrh_views_upload( $views ) {
 function mfrh_admin_head() {
 	if ( ! empty( $_GET['mfrh_rename'] ) ) {
 		$mfrh_rename = $_GET['mfrh_rename'];
-		mfrh_attachment_fields_to_save( get_post( $mfrh_rename, ARRAY_A ), null );
+		mfrh_rename_media( get_post( $mfrh_rename, ARRAY_A ), null );
 		$_SERVER['REQUEST_URI'] = remove_query_arg(array('mfrh_rename'), $_SERVER['REQUEST_URI']);
 	}
 	
@@ -121,12 +179,7 @@ function mfrh_admin_head() {
 		$ids = array();
 		$total = 0;
 		global $wpdb;
-		$postids = $wpdb->get_col( $wpdb->prepare ( "
-			SELECT p.ID
-			FROM $wpdb->posts p
-			WHERE post_status = 'inherit'
-			AND post_type = 'attachment'
-		", 0, 0 ) );
+		$postids = $wpdb->get_col( "SELECT p.ID FROM $wpdb->posts p WHERE post_status = 'inherit' AND post_type = 'attachment'" );
 		foreach ( $postids as $id ) {
 			if ($all)
 				array_push( $ids, $id );
@@ -142,7 +195,7 @@ function mfrh_admin_head() {
 	}
 	else if ($subaction == 'renameMediaId') {
 		$id = intval( $_POST['id'] );
-		mfrh_attachment_fields_to_save( get_post( $id, ARRAY_A ), null );
+		mfrh_rename_media( get_post( $id, ARRAY_A ), null );
 		echo 1;
 		die();
 	}
@@ -162,12 +215,7 @@ function mfrh_admin_menu() {
 
 function mfrh_file_counter( &$flagged, &$total, $force = false ) {
 	global $wpdb;
-	$postids = $wpdb->get_col( $wpdb->prepare ( "
-		SELECT p.ID
-		FROM $wpdb->posts p
-		WHERE post_status = 'inherit'
-		AND post_type = 'attachment'
-	", 0, 0 ) );
+	$postids = $wpdb->get_col( "SELECT p.ID FROM $wpdb->posts p WHERE post_status = 'inherit' AND post_type = 'attachment'" );
 	static $calculated = false;
 	static $sflagged = 0;
 	static $stotal = 0;
@@ -186,48 +234,52 @@ function mfrh_file_counter( &$flagged, &$total, $force = false ) {
 	$total = $stotal;
 }
 
-function mfrh_check_attachment( $id, $output = false ) {
+function mfrh_check_attachment( $id, &$output ) {
 	$post = get_post( $id, ARRAY_A );
-	$meta = wp_get_attachment_metadata( $post['ID'] );
 	$sanitized_media_title = sanitize_title( $post['post_title'] );
 	$old_filepath = get_attached_file( $post['ID'] );
 	$path_parts = pathinfo( $old_filepath );
 	
-	// Don't do anything if the media title didn't change or if it would turn to an empty string
-	if ( empty( $sanitized_media_title ) || ( isset( $meta["sanitized_title"] ) 
-		&& $meta["sanitized_title"] === $sanitized_media_title ) ) {
+	// Filename is equal to sanitized title
+	if ( $sanitized_media_title == $path_parts['filename'] ) {
 		return false;
 	}
-	else if ( !isset( $meta['sanitized_title'] ) && $post['post_title'] == $path_parts['filename'] ) {
-		$meta['sanitized_title'] = $sanitized_media_title;
-		wp_update_attachment_metadata( $post['ID'], $meta );
-	}
-	else {
-		if ( !get_post_meta( $post['ID'], '_require_file_renaming' ) )
-			add_post_meta( $post['ID'], '_require_file_renaming', true );
-		if ($output) {
-			echo "post_title: " . $post['post_title'] . "<br />";
-			echo "sanitized_media_title: " . $sanitized_media_title . "<br />";
-			echo "sanitized_title: " . ( isset( $meta['sanitized_title'] ) ? $meta['sanitized_title'] : "-"  ) . "<br />";
-			echo "filename: " . $path_parts['filename'] . "<br />";
-			echo "<b>File needs to be renamed.</b><br />";
-			echo "<br />";
-		}
-	}
+
+	if ( !get_post_meta( $post['ID'], '_require_file_renaming' ) )
+		add_post_meta( $post['ID'], '_require_file_renaming', true );
+	$directory = $path_parts['dirname']; // '2011/01'
+	$ext = str_replace( 'jpeg', 'jpg', $path_parts['extension'] );;
+	$desired_filename = $sanitized_media_title . '.' . $ext;
+
+	// Send info to the requester function
+	$output['post_title'] = $post['post_title'];
+	$output['current_filename'] = $path_parts['filename'] . "." . $path_parts['extension'];
+	$output['desired_filename'] = $desired_filename;
+	$output['desired_filename_exists'] = file_exists( $directory . "/" . $desired_filename );
 	return true;
 }
 
 function mfrh_check_text() {
 	global $wpdb;
-	$ids = $wpdb->get_col( $wpdb->prepare ( "
+	$ids = $wpdb->get_col( "
 		SELECT p.ID
 		FROM $wpdb->posts p
 		WHERE post_status = 'inherit'
 		AND post_type = 'attachment'
-	", 0, 0 ) );
+	" );
 	echo "<div style='font-size: 11px; margin-top: 15px;'>";
-	foreach ( $ids as $id )
-		mfrh_check_attachment( $id, true );
+	foreach ( $ids as $id ) {
+		if (mfrh_check_attachment( $id, $output )) {
+			echo "post_title: " . $output['post_title'] . "<br />";
+			echo "current_filename: " . $output['current_filename'] . "<br />";
+			echo "desired_filename: " . $output['desired_filename'] . "<br />";
+			if ( $output['desired_filename_exists'] )
+				echo "<b><a href='post.php?post=" . $id . "&action=edit'>This media</a>'s title needs to be <span style='color: red;'>modified</span>.</b><br />";
+			else
+				echo "<b><a href='post.php?post=" . $id . "&action=edit'>This media</a> is ready to be renamed.</b><br />";
+			echo "<br />";
+		}
+	}
 	echo "Scanning done.";
 	echo "</div>";
 }
@@ -278,33 +330,12 @@ function mfrh_rename_media_files() {
  */
 
 function mfrh_edit_attachment( $post_ID ) {
-	mfrh_check_attachment( $post_ID );
+	mfrh_check_attachment( $post_ID, $output );
 }
  
 function mfrh_media_send_to_editor( $html, $attachment_id, $attachment ) {
-	mfrh_check_attachment( $attachment_id );
+	mfrh_check_attachment( $attachment_id, $output );
 	return $html;
-}
-
-/**
- *
- * RETURN AN UNIQUE FILENAME
- *
- */
-
-// This is a modified copy of 'wp_unique_filename' in functions.php
-function mfrh_unique_filename( $dir, $filename ) {
-	$number = 2;
-	$info = pathinfo($filename);
-	$ext = !empty($info['extension']) ? '.' . $info['extension'] : '';
-	while ( file_exists( $dir . "/$filename" ) ) {
-		if ( $number == 2 )
-			$filename = str_replace( $ext, "-" . $number++ . $ext, $filename );
-		else {
-			$filename = str_replace( "-" . ($number - 1) . $ext, "-" . $number++ . $ext, $filename );
-		}
-	}
-	return $filename;
 }
 
 /**
@@ -314,7 +345,7 @@ function mfrh_unique_filename( $dir, $filename ) {
  *
  */
 
-function mfrh_attachment_fields_to_save( $post, $attachment ) {
+function mfrh_rename_media( $post, $attachment ) {
 
 	// NEW MEDIA FILE INFO (depending on the title of the media)
 	$sanitized_media_title = sanitize_title( $post['post_title'] );
@@ -325,15 +356,10 @@ function mfrh_attachment_fields_to_save( $post, $attachment ) {
 	$path_parts = pathinfo( $old_filepath );
 
 	// Don't do anything if the media title didn't change or if it would turn to an empty string
-	if ( empty( $sanitized_media_title ) || ( isset( $meta["sanitized_title"] ) && $meta["sanitized_title"] == $sanitized_media_title ) ) {
+	if ( $path_parts['filename'] == $sanitized_media_title ) {
 		// This media DOES NOT require renaming
 		delete_post_meta( $post['ID'], '_require_file_renaming' );
 		return $post; 
-	}
-	// Update the metadata if the file is already nice
-	else if ( !isset( $meta['sanitized_title'] ) && $post['post_title'] == $path_parts['filename'] ) {
-		$meta['sanitized_title'] = $sanitized_media_title;
-		wp_update_attachment_metadata( $post['ID'], $meta );
 	}
 	
 	// PREVIOUS MEDIA FILE INFO
@@ -352,8 +378,16 @@ function mfrh_attachment_fields_to_save( $post, $attachment ) {
 		return $post;
 	}
 	
+	$new_filename = $sanitized_media_title . '.' . $ext;
+
+	// NEW DESTINATION FILES ALREADY EXISTS - WE DON'T DO NOTHING
+	if ( file_exists( $directory . "/" . $new_filename ) ) {
+		if ( !get_post_meta( $post['ID'], '_require_file_renaming' ) )
+			add_post_meta( $post['ID'], '_require_file_renaming', true );
+		return $post;
+	}
+
 	// RENAMING
-	$new_filename = strtolower( mfrh_unique_filename( $directory, $sanitized_media_title . '.' . $ext ) );
 	$new_filepath = trailingslashit( $directory ) . $new_filename ; // '/' should be used EVEN on a Windows based server
 	// If the new file already exists, it's a weird case, let's do nothing.
 	if ( file_exists( $new_filepath ) === true ) {
@@ -384,7 +418,6 @@ function mfrh_attachment_fields_to_save( $post, $attachment ) {
 		$meta["url"] = str_replace( $noext_old_filename, $noext_new_filename, $meta["url"] );
 	else
 		$meta["url"] = $noext_new_filename . "." . $ext;
-	$meta["sanitized_title"] = $sanitized_media_title;
 	
 	// Images
 	if ( wp_attachment_is_image( $post['ID'] ) ) {
@@ -447,18 +480,16 @@ function mfrh_attachment_fields_to_save( $post, $attachment ) {
 		$orig_image_url = $orig_image_urls['full'];
 		$new_image_data = wp_get_attachment_image_src( $post['ID'], 'full' );
 		$new_image_url = $new_image_data[0];
-		$wpdb->query( $wpdb->prepare( "UPDATE $wpdb->posts SET post_content = REPLACE(post_content, 
-			'$orig_image_url', '$new_image_url');", 0 ) );
+		$wpdb->query( $wpdb->prepare( "UPDATE $wpdb->posts SET post_content = REPLACE(post_content, '%s', '%s');", $orig_image_url, $new_image_url ) );
 		foreach ( $meta['sizes'] as $size => $meta_size ) {
 			$orig_image_url = $orig_image_urls[$size];
 			$new_image_data = wp_get_attachment_image_src( $post['ID'], $size );
 			$new_image_url = $new_image_data[0];
-			$wpdb->query( $wpdb->prepare( "UPDATE $wpdb->posts SET post_content = REPLACE(post_content, 
-				'$orig_image_url', '$new_image_url');", 0 ) );
+			$wpdb->query( $wpdb->prepare( "UPDATE $wpdb->posts SET post_content = REPLACE(post_content, '%s', '%s');", $orig_image_url, $new_image_url ) );
 		}
 	} else {
 		$new_attachment_url = wp_get_attachment_url( $post['ID'] );
-		$wpdb->query( $wpdb->prepare( "UPDATE $wpdb->posts SET post_content = REPLACE(post_content, '$orig_attachment_url', '$new_attachment_url');", 0 ) );
+		$wpdb->query( $wpdb->prepare( "UPDATE $wpdb->posts SET post_content = REPLACE(post_content, '%s', '%s');", $orig_attachment_url, $new_attachment_url ) );
 	}
 	
 	// HTTP REFERER set to the new media link
