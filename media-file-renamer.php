@@ -92,7 +92,7 @@ function mfrh_views_upload( $views ) {
 }
 
 function mfrh_add_media_columns($columns) {
-    $columns['mfrh_column'] = 'Renamer';
+    $columns['mfrh_column'] = 'File Renamer';
     return $columns;
 }
 
@@ -234,6 +234,8 @@ function mfrh_file_counter( &$flagged, &$total, $force = false ) {
 	$total = $stotal;
 }
 
+
+// Return false if everything is fine, otherwise return true with an output.
 function mfrh_check_attachment( $id, &$output ) {
 	$post = get_post( $id, ARRAY_A );
 	$sanitized_media_title = sanitize_title( $post['post_title'] );
@@ -245,8 +247,6 @@ function mfrh_check_attachment( $id, &$output ) {
 		return false;
 	}
 
-	if ( !get_post_meta( $post['ID'], '_require_file_renaming' ) )
-		add_post_meta( $post['ID'], '_require_file_renaming', true );
 	$directory = $path_parts['dirname']; // '2011/01'
 	$ext = str_replace( 'jpeg', 'jpg', $path_parts['extension'] );;
 	$desired_filename = $sanitized_media_title . '.' . $ext;
@@ -255,7 +255,19 @@ function mfrh_check_attachment( $id, &$output ) {
 	$output['post_title'] = $post['post_title'];
 	$output['current_filename'] = $path_parts['filename'] . "." . $path_parts['extension'];
 	$output['desired_filename'] = $desired_filename;
-	$output['desired_filename_exists'] = file_exists( $directory . "/" . $desired_filename );
+	$output['desired_filename_exists'] = false;
+	if ( file_exists( $directory . "/" . $desired_filename ) ) {
+		$output['desired_filename_exists'] = true;
+		if ( strtolower( $output['current_filename'] ) == strtolower( $output['desired_filename'] ) ) {
+			// If Windows, let's be careful about the fact that case doesn't affect files
+			delete_post_meta( $post['ID'], '_require_file_renaming' );
+			return false;
+		}
+	}
+
+	if ( !get_post_meta( $post['ID'], '_require_file_renaming' ) )
+		add_post_meta( $post['ID'], '_require_file_renaming', true );
+
 	return true;
 }
 
