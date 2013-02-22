@@ -18,7 +18,6 @@ Originally developed for two of my websites:
 */
 
 
-add_action( 'media_row_actions', 'mfrh_media_row_actions', 10, 2 );
 add_action( 'admin_head', 'mfrh_admin_head' );
 add_action( 'admin_menu', 'mfrh_admin_menu' );
 add_action( 'wp_ajax_mfrh_rename_media', 'mfrh_wp_ajax_mfrh_rename_media' );
@@ -57,7 +56,6 @@ function mfrh_admin_notices() {
 		$screen = get_current_screen();
 		if ( $screen->base == 'post' && $screen->post_type == 'attachment' ) {
 			if ( mfrh_check_attachment( $_GET['post'], $output ) ) {
-
 				if ($output['desired_filename_exists']) {
 					echo '<div class="error">
 	       				<p>
@@ -78,7 +76,7 @@ function mfrh_admin_notices() {
  */
 
 function mfrh_pre_get_posts ( $query ) {
-	if ( !empty( $_GET['renameflag'] ) && $_GET['renameflag'] == true ) {
+	if ( !empty( $_GET['mfrh_renameIt'] ) && $_GET['mfrh_renameIt'] == true ) {
 		$query->query_vars['meta_key'] = '_require_file_renaming';
 		$query->query_vars['meta_value'] = true;
 	}
@@ -87,7 +85,7 @@ function mfrh_pre_get_posts ( $query ) {
  
 function mfrh_views_upload( $views ) {
 	mfrh_file_counter( $flagged, $total );
-	$views['mfrh_flagged'] = sprintf("<a href='upload.php?renameflag=1'>%s</a> (%d)", __("To be renamed", 'media-file-renamer'), $flagged);
+	$views['mfrh_flagged'] = sprintf("<a href='upload.php?mfrh_renameIt=1'>%s</a> (%d)", __("To be renamed", 'media-file-renamer'), $flagged);
     return $views;
 }
 
@@ -99,28 +97,12 @@ function mfrh_add_media_columns($columns) {
 function mfrh_manage_media_custom_column( $column_name, $id ) {
     if ( $column_name == 'mfrh_column' ) {
 		if ( mfrh_check_attachment( $id, $output ) ) {
-			if ( $output['desired_filename_exists'] )
-				echo "<b>Another media with the same title exists. This media's title needs to be <span style='color: red;'>modified</span>.</b><br />";
-			else
-				echo "<b>This media</a> is ready to be renamed. <a href='?renameflag=1&mfrh_rename=" . $id . "'>Rename now.</b><br />";
-			echo "<br />";
-			echo "Current file: " . $output['current_filename'] . "<br />";
-			echo "Desired file: " . $output['desired_filename'] . "<br />";
+			mfrh_generate_explanation( $output );
+			echo "( -> " . $output['desired_filename'] . ")";
 		} else {
 			echo "<img style='margin-top: -2px; margin-bottom: 2px; width: 16px; height: 16px;' src='" . trailingslashit( WP_PLUGIN_URL ) . trailingslashit( 'media-file-renamer/img') . "tick-circle.png' />";
 		}
     }
-}
-
-function mfrh_media_row_actions( $actions, $post ) {
-	$require_file_renaming = get_post_meta( $post->ID, '_require_file_renaming', true );
-	if ( $require_file_renaming ) {
-		if ( mfrh_check_attachment( $post->ID, $output ) && !$output['desired_filename_exists'] ) {
-			$newaction['mfrh_rename_file'] = '<a href="?mfrh_rename=' . $post->ID . '" title="Rename" rel="permalink">' . __( "Rename", 'media-file-renamer' ) . '</a>';
-			return array_merge( $actions, $newaction );
-		}
-	}
-	return $actions;
 }
  
 function mfrh_admin_head() {
@@ -140,12 +122,12 @@ function mfrh_admin_head() {
 			var data = { action: 'mfrh_rename_media', subaction: 'renameMediaId', id: ids[current - 1] };
 			jQuery('#mfrh_progression').text(current + "/" + ids.length);
 			jQuery.post(ajaxurl, data, function (response) {
-				if (++current <= ids.length)
+				if (++current <= ids.length) {
 					mfrh_process_next();
-				else
-					jQuery('#mfrh_progression').text("<?php echo __( "Done.", 'media-file-renamer' ); ?>");
-					jQuery('.mfrh-flagged').text("0");
-					jQuery('.mfrh-flagged-icon').html("");
+				}
+				else {
+					jQuery('#mfrh_progression').html("<?php echo __( "Done. Please <a href='javascript:history.go(0)'>refresh</a> this page.", 'media-file-renamer' ); ?>");
+				}
 			});
 		}
 	
@@ -252,6 +234,7 @@ function mfrh_check_attachment( $id, &$output ) {
 	$desired_filename = $sanitized_media_title . '.' . $ext;
 
 	// Send info to the requester function
+	$output['post_id'] = $post['ID'];
 	$output['post_title'] = $post['post_title'];
 	$output['current_filename'] = $path_parts['filename'] . "." . $path_parts['extension'];
 	$output['desired_filename'] = $desired_filename;
@@ -272,6 +255,7 @@ function mfrh_check_attachment( $id, &$output ) {
 }
 
 function mfrh_check_text() {
+	$issues = array();
 	global $wpdb;
 	$ids = $wpdb->get_col( "
 		SELECT p.ID
@@ -279,21 +263,21 @@ function mfrh_check_text() {
 		WHERE post_status = 'inherit'
 		AND post_type = 'attachment'
 	" );
-	echo "<div style='font-size: 11px; margin-top: 15px;'>";
-	foreach ( $ids as $id ) {
-		if (mfrh_check_attachment( $id, $output )) {
-			echo "post_title: " . $output['post_title'] . "<br />";
-			echo "current_filename: " . $output['current_filename'] . "<br />";
-			echo "desired_filename: " . $output['desired_filename'] . "<br />";
-			if ( $output['desired_filename_exists'] )
-				echo "<b><a href='post.php?post=" . $id . "&action=edit'>This media</a>'s title needs to be <span style='color: red;'>modified</span>.</b><br />";
-			else
-				echo "<b><a href='post.php?post=" . $id . "&action=edit'>This media</a> is ready to be renamed.</b><br />";
-			echo "<br />";
-		}
+	foreach ( $ids as $id )
+		if ( mfrh_check_attachment( $id, $output ) )
+			array_push( $issues, $output );
+	return $issues;
+}
+
+function mfrh_generate_explanation ( $file ) {
+	if ( $file['post_title'] == "" )
+		echo "<b>No title. <a href='media.php?attachment_id=" . $file['post_id'] . "&action=edit'>Add a title.</a>";
+	else if ( $file['desired_filename_exists'] )
+		echo "<b>Title already exists. <a href='media.php?attachment_id=" . $file['post_id'] . "&action=edit'>Modify title.</a>";
+	else {
+		$page = isset( $_GET['page'] ) ? ( '&page=' . $_GET['page'] ) : "";
+		echo "<b>Ready to be renamed. <a href='?mfrh_renameIt=1" . $page . "&mfrh_scancheck&mfrh_rename=" . $file['post_id'] . "'>Rename now.</a></b><br />";
 	}
-	echo "Scanning done.";
-	echo "</div>";
 }
 
 function mfrh_rename_media_files() {
@@ -303,33 +287,72 @@ function mfrh_rename_media_files() {
 	<h2>Media File Renamer &#8226; Dashboard</h2>
 	
 	<?php
-	if ( isset( $_GET ) && isset( $_GET['check'] ) )
-		mfrh_check_text();
+	$checkFiles = null;
+	if ( isset( $_GET ) && isset( $_GET['mfrh_scancheck'] ) )
+		$checkFiles = mfrh_check_text();
 	
 	mfrh_file_counter( $flagged, $total, true );
 	?>
+	
+	<div style='margin-top: 12px; background: #EEE; padding: 5px; border-radius: 4px; height: 24px; box-shadow: 0px 0px 3px #575757;'>
+		<? if ($flagged > 0): ?>
+			<a onclick='mfrh_rename_media(false)' id='mfrh_rename_dued_images' class='button-primary'>
+				<?php echo sprintf( __( "Rename <span class='mfrh-flagged'>%d</span> flagged media", 'media-file-renamer' ), $flagged ); ?>
+			</a>
+		<?php else: ?>
+			<a id='mfrh_rename_dued_images' class='button-secondary'>
+				<?php echo sprintf( __( "Rename <span class='mfrh-flagged'>%d</span> flagged media", 'media-file-renamer' ), $flagged ); ?>
+			</a>
+		<?php endif; ?>
+		
+		<a onclick='mfrh_rename_media(true)' id='mfrh_rename_all_images' class='button-secondary' 
+			style='margin-left: 10px; margin-right: 10px'>
+			<?php echo sprintf( __( "Rename all %d media", 'media-file-renamer' ), $total ); ?>
+		</a>
+		<span id='mfrh_progression'></span>
+	</div>
+
 	<p>
 		<b>There are <span class='mfrh-flagged' style='color: red;'><?php _e( $flagged ); ?></span> media files flagged for renaming out of <?php _e( $total ); ?> in total.</b> Those are the files that couldn't be renamed on the fly when their names were updated. You can now rename those flagged media, or rename all of them (which should actually done when you install the plugin for the first time). <span style='color: red;'>Please backup your WordPress upload folder and database before using these functions.</span>
 	</p>
-	<? if ($flagged > 0): ?>
-		<a onclick='mfrh_rename_media(false)' id='mfrh_rename_dued_images' class='button-primary'>
-			<?php echo sprintf( __( "Rename <span class='mfrh-flagged'>%d</span> flagged media", 'media-file-renamer' ), $flagged ); ?>
-		</a>
-	<?php else: ?>
-		<a id='mfrh_rename_dued_images' class='button-primary'>
-			<?php echo sprintf( __( "Rename <span class='mfrh-flagged'>%d</span> flagged media", 'media-file-renamer' ), $flagged ); ?>
-		</a>
-	<?php endif; ?>
+
+	<table class='wp-list-table widefat fixed media' style='margin-top: 15px;'>
+		<thead>
+			<tr><th>Title</th><th>Current Filename</th><th>Desired Filename</th><th>Action</th></tr>
+		</thead>
+		<tfoot>
+			<tr><th>Title</th><th>Current Filename</th><th>Desired Filename</th><th>Action</th></tr>
+		</tfoot>
+		<tbody>
+			<?php
+				if ( $checkFiles != null ) {
+					foreach ( $checkFiles as $file ) {
+						echo "<tr><td><a href='media.php?attachment_id=" . $file['post_id'] . "&action=edit'>" . ( $file['post_title'] == "" ? "(no title)" : $file['post_title'] ) . "</a></td>"
+							. "<td>" . $file['current_filename'] . "</td>"
+							. "<td>" . $file['desired_filename'] . "</td>";
+						echo "<td>";
+						mfrh_generate_explanation( $file );
+						echo "</td></tr>";
+					}
+				}
+				else if ( isset( $_GET['mfrh_scancheck'] ) && ( $checkFiles == null || count( $checkFiles ) < 1 ) ) {
+					?><tr><td colspan='4'><div style='width: 100%; margin-top: 15px; margin-bottom: 15px; text-align: center;'>
+						<div style='margin-top: 15px;'>There are no issues.</div>
+					</div></td><?php
+				}
+				else if ( $checkFiles == null ) {
+					?><tr><td colspan='4'><div style='width: 100%; text-align: center;'>
+						<a class='button-secondary' href="?page=rename_media_files&mfrh_scancheck" style='margin-top: 15px; margin-bottom: 15px; height: 35px; padding: 5px; width: 200px;'>
+							<?php echo sprintf( __( "Scan All & List Issues", 'media-file-renamer' ) ); ?>
+						</a>
+					</div></td><?php
+				}
+			?>
+		</tbody>
+	</table>
+
 	
-	<a onclick='mfrh_rename_media(true)' id='mfrh_rename_all_images' class='button-primary' 
-		style='margin-left: 10px; margin-right: 10px'>
-		<?php echo sprintf( __( "Rename all %d media", 'media-file-renamer' ), $total ); ?>
-	</a>
-	<span id='mfrh_progression'></span>
-	<a id='mfrh_rename_all_images' class='button-secondary' href="?page=rename_media_files&check"
-		style='float:right; margin-left: 10px; margin-right: 10px'>
-		<?php echo sprintf( __( "Check Test", 'media-file-renamer' ), $total ); ?>
-	</a>
+
 	</div>
 	<?php
 	jordy_meow_footer();
@@ -358,6 +381,10 @@ function mfrh_media_send_to_editor( $html, $attachment_id, $attachment ) {
  */
 
 function mfrh_rename_media( $post, $attachment ) {
+
+	if ( $post['post_title'] == "" ) {
+		return $post;
+	}
 
 	// NEW MEDIA FILE INFO (depending on the title of the media)
 	$sanitized_media_title = sanitize_title( $post['post_title'] );
@@ -426,11 +453,11 @@ function mfrh_rename_media( $post, $attachment ) {
 	
 	// Update the attachment meta
 	$meta['file'] = str_replace( $noext_old_filename, $noext_new_filename, $meta['file'] );
-	if ( isset( $meta["url"] ) && $meta["url"] != "" )
+	if ( isset( $meta["url"] ) && $meta["url"] != "" && count( $meta["url"] ) > 4 )
 		$meta["url"] = str_replace( $noext_old_filename, $noext_new_filename, $meta["url"] );
 	else
 		$meta["url"] = $noext_new_filename . "." . $ext;
-	
+
 	// Images
 	if ( wp_attachment_is_image( $post['ID'] ) ) {
 		// Loop through the different sizes in the case of an image, and rename them.
@@ -480,6 +507,7 @@ function mfrh_rename_media( $post, $attachment ) {
 	//[alx359] That's not true for post_type=attachments|post_mime_type=image/*. The expected GUID here is [url]
 	//$post['guid'] = $sanitized_media_title . " [" . $post['ID'] . "]";
 	$post['guid'] = $meta["url"];
+	
 	wp_update_post( $post );
 	if ( !empty( $article ) ) {
 		wp_update_post( $article );

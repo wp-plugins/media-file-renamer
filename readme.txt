@@ -10,9 +10,7 @@ This plugins allows you to rename physically the media files by updating their t
 
 == Description ==
 
-By updating the name of the image / media, this plugin will rename physically the filename nicely, update all the references to that media in the associated post if there is any (img, src, url...). 
-
-Using the File Renamer Dashboard, you can bulk-rename all your files all at once, or only the flagged files.
+By updating the name of the image / media, this plugin will rename physically the filename nicely, update all the references to that media in the associated post if there is any (img, src, url...). Using the File Renamer Dashboard, you can bulk-rename all your files all at once, or only the flagged files.
 
 The plugin has been tested with many plugins (including WP Retina 2x and WPML) and supports Windows, Linux and BSD.
 
@@ -37,6 +35,12 @@ Yes, sure, you can! But since the plugin got popular, I get many emails everyday
 3. Has to be renamed.
 
 == Changelog ==
+
+= 1.0.0 =
+* Perfectly stable version :)
+* Change: Rename Dashboard enhanced.
+* Change: Scanning function now displays the results nicely.
+* Change: Handle the media with 'physical' issues.
 
 = 0.9.4 =
 * Fix: Works better on Windows (file case).
