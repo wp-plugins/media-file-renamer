@@ -53,6 +53,9 @@ function mfrh_admin_notices() {
 	global $pagenow;
 
 	if (is_admin()) {
+
+		//print_r( get_uploaded_header_images() );
+
 		$screen = get_current_screen();
 		if ( $screen->base == 'post' && $screen->post_type == 'attachment' ) {
 			if ( mfrh_check_attachment( $_GET['post'], $output ) ) {
@@ -217,8 +220,29 @@ function mfrh_file_counter( &$flagged, &$total, $force = false ) {
 }
 
 
+function mfrh_is_header_image ( $id ) {
+	static $header_images = false;
+	if ( !$header_images ) {
+		$header_images = array();
+		$images = get_uploaded_header_images();
+		foreach ( $images as $image )
+			array_push( $header_images, $image['attachment_id'] );
+	}
+	if ( in_array( $id, $header_images ) )
+		return true;
+	return false;
+}
+
 // Return false if everything is fine, otherwise return true with an output.
 function mfrh_check_attachment( $id, &$output ) {
+
+	// Skip header images
+	if ( mfrh_is_header_image( $id ) ) {
+		delete_post_meta( $id, '_require_file_renaming' );
+		return false;
+	}
+
+	// Get info
 	$post = get_post( $id, ARRAY_A );
 	$sanitized_media_title = sanitize_title( $post['post_title'] );
 	$old_filepath = get_attached_file( $post['ID'] );
@@ -247,10 +271,8 @@ function mfrh_check_attachment( $id, &$output ) {
 			return false;
 		}
 	}
-
 	if ( !get_post_meta( $post['ID'], '_require_file_renaming' ) )
 		add_post_meta( $post['ID'], '_require_file_renaming', true );
-
 	return true;
 }
 
@@ -385,6 +407,11 @@ function mfrh_rename_media( $post, $attachment ) {
 	if ( $post['post_title'] == "" ) {
 		return $post;
 	}
+
+	// Skip header images
+	if ( mfrh_is_header_image( $post['ID'] ) ) 
+		delete_post_meta( $post['ID'], '_require_file_renaming' );
+		return $post;
 
 	// NEW MEDIA FILE INFO (depending on the title of the media)
 	$sanitized_media_title = sanitize_title( $post['post_title'] );
