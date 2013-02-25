@@ -21,8 +21,6 @@ Originally developed for two of my websites:
 add_action( 'admin_head', 'mfrh_admin_head' );
 add_action( 'admin_menu', 'mfrh_admin_menu' );
 add_action( 'wp_ajax_mfrh_rename_media', 'mfrh_wp_ajax_mfrh_rename_media' );
-add_filter( 'views_upload', 'mfrh_views_upload' );
-add_action( 'pre_get_posts', 'mfrh_pre_get_posts' );
 add_filter( 'media_send_to_editor', 'mfrh_media_send_to_editor', 20, 3 );
 add_action( 'admin_notices', 'mfrh_admin_notices' );
 
@@ -77,20 +75,6 @@ function mfrh_admin_notices() {
  * 'RENAME' LINK
  *
  */
-
-function mfrh_pre_get_posts ( $query ) {
-	if ( !empty( $_GET['mfrh_renameIt'] ) && $_GET['mfrh_renameIt'] == true ) {
-		$query->query_vars['meta_key'] = '_require_file_renaming';
-		$query->query_vars['meta_value'] = true;
-	}
-	return $query;
-}
- 
-function mfrh_views_upload( $views ) {
-	mfrh_file_counter( $flagged, $total );
-	$views['mfrh_flagged'] = sprintf("<a href='upload.php?mfrh_renameIt=1'>%s</a> (%d)", __("To be renamed", 'media-file-renamer'), $flagged);
-    return $views;
-}
 
 function mfrh_add_media_columns($columns) {
     $columns['mfrh_column'] = 'File Renamer';
@@ -228,9 +212,7 @@ function mfrh_is_header_image ( $id ) {
 		foreach ( $images as $image )
 			array_push( $header_images, $image['attachment_id'] );
 	}
-	if ( in_array( $id, $header_images ) )
-		return true;
-	return false;
+	return in_array( $id, $header_images );
 }
 
 // Return false if everything is fine, otherwise return true with an output.
@@ -298,7 +280,7 @@ function mfrh_generate_explanation ( $file ) {
 		echo "<b>Title already exists. <a href='media.php?attachment_id=" . $file['post_id'] . "&action=edit'>Modify title.</a>";
 	else {
 		$page = isset( $_GET['page'] ) ? ( '&page=' . $_GET['page'] ) : "";
-		echo "<b>Ready to be renamed. <a href='?mfrh_renameIt=1" . $page . "&mfrh_scancheck&mfrh_rename=" . $file['post_id'] . "'>Rename now.</a></b><br />";
+		echo "<b>Ready to be renamed. <a href='?" . $page . "&mfrh_scancheck&mfrh_rename=" . $file['post_id'] . "'>Rename now.</a></b><br />";
 	}
 }
 
@@ -409,9 +391,10 @@ function mfrh_rename_media( $post, $attachment ) {
 	}
 
 	// Skip header images
-	if ( mfrh_is_header_image( $post['ID'] ) ) 
+	if ( mfrh_is_header_image( $post['ID'] ) ) {
 		delete_post_meta( $post['ID'], '_require_file_renaming' );
 		return $post;
+	}
 
 	// NEW MEDIA FILE INFO (depending on the title of the media)
 	$sanitized_media_title = sanitize_title( $post['post_title'] );
