@@ -296,15 +296,15 @@ function mfrh_rename_media_files() {
 	?>
 	
 	<div style='margin-top: 12px; background: #EEE; padding: 5px; border-radius: 4px; height: 24px; box-shadow: 0px 0px 3px #575757;'>
-		<? if ($flagged > 0): ?>
+		<? if ($flagged > 0) { ?>
 			<a onclick='mfrh_rename_media(false)' id='mfrh_rename_dued_images' class='button-primary'>
 				<?php echo sprintf( __( "Rename <span class='mfrh-flagged'>%d</span> flagged media", 'media-file-renamer' ), $flagged ); ?>
 			</a>
-		<?php else: ?>
+		<?php } else { ?>
 			<a id='mfrh_rename_dued_images' class='button-secondary'>
 				<?php echo sprintf( __( "Rename <span class='mfrh-flagged'>%d</span> flagged media", 'media-file-renamer' ), $flagged ); ?>
 			</a>
-		<?php endif; ?>
+		<?php } ?>
 		
 		<a onclick='mfrh_rename_media(true)' id='mfrh_rename_all_images' class='button-secondary' 
 			style='margin-left: 10px; margin-right: 10px'>
