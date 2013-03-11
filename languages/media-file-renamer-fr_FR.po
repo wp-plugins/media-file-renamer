@@ -1,0 +1,339 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: WP Retina 2x\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2013-03-11 16:39+0900\n"
+"PO-Revision-Date: 2013-03-11 16:40+0900\n"
+"Last-Translator: Jordy Meow <work@meow.fr>\n"
+"Language-Team: Jordy Meow <work@meow.fr>\n"
+"Language: fr_FR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-KeywordsList: _e;__\n"
+"X-Poedit-Basepath: ../\n"
+"X-Generator: Poedit 1.5.5\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+"X-Poedit-SearchPath-0: .\n"
+
+#: media-file-renamer.php:89 media-file-renamer.php:189
+msgid "Rename"
+msgstr "Renommer"
+
+#: media-file-renamer.php:125
+msgid "Done. Please <a href='javascript:history.go(0)'>refresh</a> this page."
+msgstr "Fait. <a href='javascript:history.go(0)'>Rafraîchissez</a> cette page."
+
+#: media-file-renamer.php:134
+msgid "Please wait..."
+msgstr "Patientez SVP..."
+
+#: media-file-renamer.php:188
+msgid "Flagged to be renamed"
+msgstr "Flaggé pour être renommé"
+
+#: media-file-renamer.php:288
+msgid "No title."
+msgstr "Pas de titre."
+
+#: media-file-renamer.php:288
+msgid "Write a title."
+msgstr "Écrire un titre."
+
+#: media-file-renamer.php:290
+msgid "Title already exists."
+msgstr "Le titre existe déjà."
+
+#: media-file-renamer.php:290
+msgid "Modify title."
+msgstr "Modifier le titre."
+
+#: media-file-renamer.php:293
+msgid "Ready to be renamed."
+msgstr "Prêt à être renommé."
+
+#: media-file-renamer.php:293
+msgid "Rename now."
+msgstr "Renommer maintenant."
+
+#: media-file-renamer.php:315 media-file-renamer.php:319
+#, php-format
+msgid "Rename <span class='mfrh-flagged'>%d</span> flagged media"
+msgstr "Renommer les <span class='mfrh-flagged'>%d</span> fichiers flaggés"
+
+#: media-file-renamer.php:325
+#, php-format
+msgid "Rename all %d media"
+msgstr "Renommer tous les %d fichiers"
+
+#: media-file-renamer.php:336 media-file-renamer.php:339
+msgid "Title"
+msgstr "Titre"
+
+#: media-file-renamer.php:336 media-file-renamer.php:339
+msgid "Current Filename"
+msgstr "Fichier actuel"
+
+#: media-file-renamer.php:336 media-file-renamer.php:339
+msgid "Desired Filename"
+msgstr "Fichier cible"
+
+#: media-file-renamer.php:336 media-file-renamer.php:339
+msgid "Action"
+msgstr "Action"
+
+#: media-file-renamer.php:355
+msgid ""
+"There are no issues.<br />Cool! Let's go visit <a href='http://www."
+"totorotimes.com'>Totoro Times</a> :)"
+msgstr ""
+"Il n'y a aucun problème. Cool ! Allons visiter <a href='http://www."
+"totorotimes.fr'>Totoro Times</a> :)"
+
+#: media-file-renamer.php:361
+msgid "Scan All & List Issues"
+msgstr "Lister les problèmes (rescan)"
+
+#: mfrh_settings.php:34
+msgid "Basics"
+msgstr "Simple"
+
+#: mfrh_settings.php:41
+msgid "Rename Slug"
+msgstr "Renommer Identifiant (slug)"
+
+#: mfrh_settings.php:42
+msgid "The image slug will be also renamed."
+msgstr "L'identifiant (slug) sera également renommé."
+
+#~ msgid "Rename %s"
+#~ msgstr "Renommer %s"
+
+#~ msgid "There are no issues."
+#~ msgstr "Il n'y a aucun problème. "
+
+#~ msgid ""
+#~ "Done. You might want to <a href='?page=wp-"
+#~ "retina-2x&view=issues&refresh=true'>refresh</a> the issues."
+#~ msgstr ""
+#~ "Fait. Vous devriez peut-être <a href='?page=wp-"
+#~ "retina-2x&view=issues&refresh=true'>rafraîchir</a> la liste des problèmes."
+
+#~ msgid "Nothing to do ;)"
+#~ msgstr "Rien à faire ;)"
+
+#~ msgid "GENERATE"
+#~ msgstr "GÉNÉRER"
+
+#~ msgid "Retina files deleted."
+#~ msgstr "Les images Retina ont été supprimées."
+
+#~ msgid "Retina files generated."
+#~ msgstr "Les images Retina ont été générées."
+
+#~ msgid "You do not have permission to upload files."
+#~ msgstr "Vous n'avez pas la permission d'uploader des fichiers."
+
+#~ msgid "The file is not an image or the upload went wrong."
+#~ msgstr ""
+#~ "Ce fichier n'est pas une image ou alors il y a eu un problème durant "
+#~ "l'upload."
+
+#~ msgid "You cannot use this file (wrong extension? wrong type?)."
+#~ msgstr ""
+#~ "Vous ne pouvez pas utiliser ce fichier (mauvaise extension ou type ?)."
+
+#~ msgid "Replaced successfully."
+#~ msgstr "Remplacé avec succès."
+
+#~ msgid "Retina images"
+#~ msgstr "Images Retina"
+
+#~ msgid "Retina %s"
+#~ msgstr "Retina %s"
+
+#~ msgid "Generate"
+#~ msgstr "Générer"
+
+#~ msgid "Delete all @2x"
+#~ msgstr "Tout supprimer (@2x)"
+
+#~ msgid "Refresh issues"
+#~ msgstr "Rafraîchir"
+
+#~ msgid "Issues has been refreshed."
+#~ msgstr "La liste des problèmes a été rafraîchie."
+
+#~ msgid ""
+#~ "This screen allows you to check the media for which the retina files are "
+#~ "missing. You can then create the files independently for each media or "
+#~ "for all of them. You can also upload and replace the images by drag & "
+#~ "drop them on the grid."
+#~ msgstr ""
+#~ "Cet écran vous permet de vérifier pour quels médias les fichiers Retina "
+#~ "n'ont pas encore été créés. Vous pouvez ensuite créer les fichiers "
+#~ "indépendemment ou pour l'ensemble d'entre-eux. Vous pouvez aussi glisser "
+#~ "& déposer les nouveaux fichiers dans le tableau."
+
+#~ msgid "All"
+#~ msgstr "Tous"
+
+#~ msgid "Issues"
+#~ msgstr "Problèmes"
+
+#~ msgid "Ignored"
+#~ msgstr "Ignorés"
+
+#~ msgid "Titre"
+#~ msgstr "Titre"
+
+#~ msgid "IGNORE"
+#~ msgstr "IGNORER"
+
+#~ msgid "Client side"
+#~ msgstr "Client side"
+
+#~ msgid "Server side"
+#~ msgstr "Server side"
+
+#~ msgid ""
+#~ "By the way, you are using a <b>WordPress Multi-Site installation</b>! You "
+#~ "must edit your .htaccess manually and add '<b>RewriteRule ^files/(.+) wp-"
+#~ "content/plugins/wp-retina-2x/wr2x_image.php?ms=true&file=$1 [L]</b>' as "
+#~ "the first RewriteRule if you want the server-side to work."
+#~ msgstr ""
+#~ "Vous avez une <b>installation Multi-Site de WordPress</b> ! Vous devez "
+#~ "éditer votre .htaccess manuellement et rajouter '<b>RewriteRule ^files/(."
+#~ "+) wp-content/plugins/wp-retina-2x/wr2x_image.php?ms=true&file=$1 [L]</"
+#~ "b>' en tant que première RewriteRule si vous voulez que le Client side "
+#~ "fonctionne."
+
+#~ msgid ""
+#~ "The permalinks are not enabled. They need to be enabled in order to use "
+#~ "the server-side method."
+#~ msgstr ""
+#~ "Les permaliens n'étant pas activés, la méthode côté serveur ne pourra pas "
+#~ "fonctionner."
+
+#~ msgid "Advanced"
+#~ msgstr "Avancé"
+
+#~ msgid "Disabled Sizes"
+#~ msgstr "Tailles désactivés"
+
+#~ msgid "The checked sizes will not be generated for Retina displays."
+#~ msgstr ""
+#~ "Les tailles sélectionnés ne seront pas prises en compte pour Retina."
+
+#~ msgid "Auto Generate"
+#~ msgstr "Auto-Génération"
+
+#~ msgid ""
+#~ "Generate Retina images automatically when images are uploaded to the "
+#~ "Media Library."
+#~ msgstr ""
+#~ "Génération automatique des fichiers Retina dès que vous uploadez ou "
+#~ "remplacez des médias."
+
+#~ msgid "Method"
+#~ msgstr "Méthode"
+
+#~ msgid ""
+#~ "<br />The <b>server-side method</b> is very fast and efficient. However, "
+#~ "depending on the hosting and cache system you are using (including "
+#~ "services like Cloudflare) you might encounter issues.\n"
+#~ "                <br /><br />The <b>client-side method</b> is fail-safe "
+#~ "and only uses a JavaScript file. When a Retina Display is detected, "
+#~ "requests for every images on the page will be sent to the server and a "
+#~ "high resolution one will be retrieved if available. Most websites (Apple "
+#~ "for instance) use this method."
+#~ msgstr ""
+#~ "La <b>méthode côté serveur</b> est très rapide et optimal. Cependant, "
+#~ "selon votre système de caching (et tout particulièrement si vous utilisez "
+#~ "Cloudflare), ça ne fonctionnera peut-être pas correctement.\n"
+#~ "                La <b>méthode côté client</b> est très fiable, fonctionne "
+#~ "dans tous les cas et utilise seulement un JavaScript. C'est une méthode "
+#~ "moins rapide et performante mais c'est la méthode utilisée sur le site "
+#~ "d'Apple."
+
+#~ msgid "Debug Mode"
+#~ msgstr "Mode Debug"
+
+#~ msgid ""
+#~ "If checked, the client will be always served Retina images. Convenient "
+#~ "for testing."
+#~ msgstr ""
+#~ "Si sélectionné, les images Retina seront toujours délivrées. Idéal pour "
+#~ "vos tests."
+
+#~ msgid "Hide 'Retina' column"
+#~ msgstr "Cacher la colonne 'Retina'"
+
+#~ msgid "Will hide the 'Retina Column' from the Media Library."
+#~ msgstr "La colonne Retina ne s'affichera plus dans la Bibliothèque."
+
+#~ msgid "Hide Retina Dashboard"
+#~ msgstr "Cacher le Retina Dashboard"
+
+#~ msgid "Doesn't show the Retina Dashboard menu and tools."
+#~ msgstr "Le Retina Dashboard ne s'affichera plus dans les menus."
+
+#~ msgid ""
+#~ "Current method: <u>Server-side</u>.</span> Oh, and don't forget to check "
+#~ "the tutorial of this plugin on <a href='http://www.totorotimes.com/news/"
+#~ "retina-display-wordpress-plugin'>Totoro Times</a>."
+#~ msgstr ""
+#~ "Méthode sélectionnée: <u>Server-side</u>.</span> Oh, n'oubliez pas de "
+#~ "lire mon tutoriel sur ce plugin sur <a href='http://www.totorotimes.com/"
+#~ "news/retina-display-wordpress-plugin'>Totoro Times</a>."
+
+#~ msgid "Done."
+#~ msgstr "Terminé."
+
+#~ msgid "ERROR"
+#~ msgstr "ERREUR"
+
+#~ msgid "Not created yet."
+#~ msgstr "Pas encore créé."
+
+#~ msgid "Generate for all files"
+#~ msgstr "Générer tous les fichiers"
+
+#~ msgid ""
+#~ "By the way, you are also using a <b>WordPress Network installation</b>. "
+#~ "The server-side might not work for you, so <b>please try the client-side "
+#~ "method instead</b>. If you really want to use this method, you will have "
+#~ "to work on your .htaccess manually."
+#~ msgstr ""
+#~ "Vous utilisez une version de WordPress <b>Multisite</b>. Il est possible "
+#~ "que la méthode côté serveur ne fonctionne pas, alors dans ce cas essayé "
+#~ "la méthode <b>côté client</b>. Si vous voulez vraiment utiliser cette "
+#~ "méthode, vous aurez peut-être besoin de bidouiller votre .htaccess "
+#~ "manuellement."
+
+#~ msgid ""
+#~ "This plugin supports and uses the <a href='http://wordpress.org/extend/"
+#~ "plugins/enable-media-replace/'>Enable Media Replace</a> plugin if "
+#~ "available. A 'Replace' button will appear in case your images are too "
+#~ "small. It is strongly recommended to install it."
+#~ msgstr ""
+#~ "WP Retina 2x peut automatiquement utiliser le plugin <a href='http://"
+#~ "wordpress.org/extend/plugins/enable-media-replace/'>Enable Media Replace</"
+#~ "a> si il est installé. Un bouton 'Réuploader' apparaîtra alors lorsque "
+#~ "l'image originale est trop petite."
+
+#~ msgid ""
+#~ "This plugin is actively developped and maintained by <a href='https://"
+#~ "plus.google.com/106075761239802324012'>Jordy Meow</a>.<br />Please visit "
+#~ "me at <a href='http://www.totorotimes.com'>Totoro Times</a>, a website "
+#~ "about Japan, photography and abandoned places.<br />And thanks for "
+#~ "linking us on <a href='https://www.facebook.com/totorotimes'>Facebook</a> "
+#~ "and <a href='https://plus.google.com/106832157268594698217'>Google+</a> :)"
+#~ msgstr ""
+#~ "Ce plugin est activement développé et maintenu par <a href='https://plus."
+#~ "google.com/106075761239802324012'>Jordy Meow</a>.<br />Merci de me "
+#~ "visiter sur <a href='http://www.totorotimes.fr'>Totoro Times</a>, un site "
+#~ "sur le Japan, la photographie et les endroits abandonnés.<br />Et merci "
+#~ "de nous adorer sur <a href='https://www.facebook.com/"
+#~ "totorotimes'>Facebook</a> et <a href='https://plus.google."
+#~ "com/106832157268594698217'>Google+</a> :)"

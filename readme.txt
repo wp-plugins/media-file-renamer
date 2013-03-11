@@ -14,6 +14,8 @@ By updating the name of the image / media, this plugin will rename physically th
 
 The plugin has been tested with many plugins (including WP Retina 2x and WPML) and supports Windows, Linux and BSD.
 
+Languages: English, French.
+
 == Installation ==
 
 1. Upload `media-file-renamer.php` to the `/wp-content/plugins/` directory
@@ -24,6 +26,10 @@ The plugin has been tested with many plugins (including WP Retina 2x and WPML) a
 Simply replace `media-file-renamer.php` by the new one.
 
 == Frequently Asked Questions ==
+
+= I donated, can I get rid of the donation button? =
+Of course. I don't like to see too many of those buttons neither ;) You can disable the donation buttons from all my plugins by adding this to your wp-config.php:
+`define('WP_HIDE_DONATION_BUTTONS', true);`
 
 = Can I contact you? =
 Yes, sure, you can! But since the plugin got popular, I get many emails everyday which consume almost 10% of my whole lifetime (not kidding! + it's rarely issues coming from the plugin itself). So now I ask you to visit my website <a href='http://www.totorotimes.com'>Totoro Times</a>, pick a page you like, and share it on Facebook, Twitter or your own website. I hope you understand :) Thanks a lot!
@@ -103,4 +109,4 @@ Yes, sure, you can! But since the plugin got popular, I get many emails everyday
 
 == Wishlist ==
 
-Do you have suggestions? Feel free to contact me at http://www.totorotimes.com.
+Do you have suggestions? Feel free to contact me at <a href='http://www.totorotimes.com'>Totoro Times</a>.
