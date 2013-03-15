@@ -4,15 +4,15 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_i
 Tags: rename, file, media, management, image, renamer, wpml, wp-retina-2x
 Requires at least: 3.5
 Tested up to: 3.5
-Stable tag: 1.0.4
+Stable tag: 1.2.0
 
 This plugins allows you to rename physically the media files by updating their titles. It also updates theirs links in the posts automatically.
 
 == Description ==
 
-By updating the name of the image / media, this plugin will rename physically the filename nicely, update all the references to that media in the associated post if there is any (img, src, url...). Using the File Renamer Dashboard, you can bulk-rename all your files all at once, or only the flagged files.
+By updating the name of the image / media, this plugin will rename physically the filename nicely, update all the references to that media in the associated post if there is any (img, src, url...). Using File Renamer (in Tools), you can bulk-rename all your files all at once, or only the flagged files, but it's recommended to do the renaming through the Media Library directly.
 
-The plugin has been tested with many plugins (including WP Retina 2x and WPML) and supports Windows, Linux and BSD.
+The plugin has been tested with many plugins (including WP Retina 2x and WPML) and supports Windows, Linux, BSD and OSX.
 
 Languages: English, French.
 
@@ -41,6 +41,13 @@ Yes, sure, you can! But since the plugin got popular, I get many emails everyday
 3. Has to be renamed.
 
 == Changelog ==
+
+= 1.2.0 =
+* Fix: issue with strong-caching with WP header images.
+* Fix: now ignore missing files.
+* Change: renaming is now part of the Media Library with nice buttons.
+* Change: the dashboard has been moved to Tools (users should use the Media Library mostly).
+* Change: no bubble counter on the dashboard menu; to avoid plugin to consume any resources.
 
 = 1.0.4 =
 * Fix: '<?' to '<?php'.

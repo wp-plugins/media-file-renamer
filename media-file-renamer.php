@@ -3,7 +3,7 @@
 Plugin Name: Media File Renamer
 Plugin URI: http://www.meow.fr/media-file-renamer
 Description: Renames media files based on their titles and updates the associated posts links.
-Version: 1.0.4
+Version: 1.2.0
 Author: Jordy Meow
 Author URI: http://www.meow.fr
 Remarks: John Godley originaly developed rename-media (http://urbangiraffe.com/plugins/rename-media/), but it wasn't working on Windows, had issues with apostrophes, and was not updating the links in the posts. That's why Media File Renamer exists.
@@ -52,6 +52,36 @@ function mfrh_init() {
 
 /**
  *
+ * MEDIA LIBRARY FILTER
+ *
+ */
+
+add_filter( 'views_upload', 'mfrh_views_upload' );
+add_action( 'pre_get_posts', 'mfrh_pre_get_posts' );
+
+function mfrh_pre_get_posts ( $query ) {
+	if ( !empty( $_GET['to_rename'] ) && $_GET['to_rename'] == 1 ) {
+		$query->query_vars['meta_key'] = '_require_file_renaming';
+		$query->query_vars['meta_value'] = true;
+	}
+	return $query;
+}
+
+function mfrh_views_upload( $views ) {
+	mfrh_file_counter( $flagged, $total );
+	if ( !empty( $_GET['to_rename'] ) && $_GET['to_rename'] == 1 ) {
+		if ( isset( $views['all'] ) )
+			$views['all'] = str_replace( "current", "", $views['all'] );
+		$views['to_rename'] = sprintf("<a class='current' href='upload.php?to_rename=1'>%s</a> (%d)", __("Rename", 'media-file-renamer'), $flagged);
+	}
+	else {
+		$views['to_rename'] = sprintf("<a href='upload.php?to_rename=1'>%s</a> (%d)", __("Rename", 'media-file-renamer'), $flagged);
+	}
+    return $views;
+}
+
+/**
+ *
  * ERROR/INFO MESSAGE HANDLING
  *
  */
@@ -61,12 +91,13 @@ function mfrh_admin_notices() {
 	//The class "error" will display the message with a red background.
 
 	global $pagenow;
-
 	if (is_admin()) {
 		$screen = get_current_screen();
-		if ( $screen->base == 'post' && $screen->post_type == 'attachment' ) {
-			if ( mfrh_check_attachment( $_GET['post'], $output ) ) {
-				if ($output['desired_filename_exists']) {
+		if ( ( $screen->base == 'post' && $screen->post_type == 'attachment' ) || 
+			( $screen->base == 'media' && isset( $_GET['attachment_id'] ) ) ) {
+			$attachmentId = isset( $_GET['post'] ) ? $_GET['post'] : $_GET['attachment_id'];
+			if ( mfrh_check_attachment( $attachmentId, $output ) ) {
+				if ( $output['desired_filename_exists'] ) {
 					echo '<div class="error">
 	       				<p>
 	       					The file ' . $output['desired_filename'] . ' already exists. Please give
@@ -94,9 +125,8 @@ function mfrh_manage_media_custom_column( $column_name, $id ) {
     if ( $column_name == 'mfrh_column' ) {
 		if ( mfrh_check_attachment( $id, $output ) ) {
 			mfrh_generate_explanation( $output );
-			echo "( -> " . $output['desired_filename'] . ")";
 		} else {
-			echo "<img style='margin-top: -2px; margin-bottom: 2px; width: 16px; height: 16px;' src='" . trailingslashit( WP_PLUGIN_URL ) . trailingslashit( 'media-file-renamer/img') . "tick-circle.png' />";
+			echo "<a href='media.php?attachment_id=" . $id . "&action=edit''><img style='margin-bottom: 2px; width: 16px; height: 16px;' src='" . trailingslashit( WP_PLUGIN_URL ) . trailingslashit( 'media-file-renamer/img') . "tick-circle.png' /></a>";
 		}
     }
 }
@@ -183,12 +213,7 @@ function mfrh_admin_head() {
 }
  
 function mfrh_admin_menu() {
-	mfrh_file_counter( $flagged, $total );
-	$warning_count = $flagged;
-	$warning_title = __( 'Flagged to be renamed', 'media-file-renamer' );
-	$renameString = __( 'Rename', 'media-file-renamer' );
-	$menu_label = sprintf( $renameString . " %s", "<span class='update-plugins count-$flagged mfrh-flagged-icon' title='$warning_title'><span class='update-count'>" . number_format_i18n( $flagged ) . "</span></span>" );
-	add_media_page( 'Media File Renamer', $menu_label, 'manage_options', 'rename_media_files', 'mfrh_rename_media_files' ); 
+	add_management_page( 'Media File Renamer', __( 'File Renamer', 'media-file-renamer' ), 'manage_options', 'rename_media_files', 'mfrh_rename_media_files' ); 
 	add_options_page( 'Media File Renamer', 'File Renamer', 'manage_options', 'mfrh_settings', 'mfrh_settings_page' );
 }
 
@@ -215,14 +240,12 @@ function mfrh_file_counter( &$flagged, &$total, $force = false ) {
 
 
 function mfrh_is_header_image ( $id ) {
-	static $header_images = false;
-	if ( !$header_images ) {
-		$header_images = array();
-		$images = get_uploaded_header_images();
-		foreach ( $images as $image )
-			array_push( $header_images, $image['attachment_id'] );
+	static $headers = false;
+	if ( $headers == false ) {
+		global $wpdb;
+		$headers = $wpdb->get_col( "SELECT post_id FROM $wpdb->postmeta WHERE meta_key = '_wp_attachment_is_custom_header'" );
 	}
-	return in_array( $id, $header_images );
+	return in_array( $id, $headers );
 }
 
 // Return false if everything is fine, otherwise return true with an output.
@@ -240,6 +263,11 @@ function mfrh_check_attachment( $id, &$output ) {
 	$old_filepath = get_attached_file( $post['ID'] );
 	$path_parts = pathinfo( $old_filepath );
 	
+	// Dead file, let's forget it!
+	if ( !file_exists( $old_filepath ) ) {
+		return false;
+	}
+
 	// Filename is equal to sanitized title
 	if ( $sanitized_media_title == $path_parts['filename'] ) {
 		return false;
@@ -257,14 +285,17 @@ function mfrh_check_attachment( $id, &$output ) {
 	$output['desired_filename_exists'] = false;
 	if ( file_exists( $directory . "/" . $desired_filename ) ) {
 		$output['desired_filename_exists'] = true;
+		
 		if ( strtolower( $output['current_filename'] ) == strtolower( $output['desired_filename'] ) ) {
 			// If Windows, let's be careful about the fact that case doesn't affect files
 			delete_post_meta( $post['ID'], '_require_file_renaming' );
 			return false;
 		}
+		
 	}
-	if ( !get_post_meta( $post['ID'], '_require_file_renaming' ) )
+	if ( !get_post_meta( $post['ID'], '_require_file_renaming' ) ) {
 		add_post_meta( $post['ID'], '_require_file_renaming', true );
+	}
 	return true;
 }
 
@@ -284,13 +315,17 @@ function mfrh_check_text() {
 }
 
 function mfrh_generate_explanation ( $file ) {
-	if ( $file['post_title'] == "" )
-		echo "<b>" . __( 'No title.', 'media-file-renamer' ) . " <a href='media.php?attachment_id=" . $file['post_id'] . "&action=edit'>" . __( 'Write a title.', 'media-file-renamer' ) . "</a>";
-	else if ( $file['desired_filename_exists'] )
-		echo "<b>" . __( 'Title already exists.', 'media-file-renamer' ) . " <a href='media.php?attachment_id=" . $file['post_id'] . "&action=edit'>" . __( 'Modify title.', 'media-file-renamer' ) . "</a>";
+	if ( $file['post_title'] == "" ) {
+		echo " <a class='button-primary' href='media.php?attachment_id=" . $file['post_id'] . "&action=edit'>" . __( 'Add title', 'media-file-renamer' ) . "</a><p style='margin-top: 5px; font-size: 9px; line-height: 11px;'>" . __( 'No title for this media, please add one.', 'media-file-renamer' ) . "</p>";
+	}
+	else if ( $file['desired_filename_exists'] ) {
+		echo "<a class='button-primary' href='media.php?attachment_id=" . $file['post_id'] . "&action=edit'>" . __( 'Edit title', 'media-file-renamer' ) . "</a><p style='margin-top: 5px; font-size: 9px; line-height: 11px;'>" . __( 'Current title already exists.', 'media-file-renamer' ) . "</p>";
+	}
 	else {
 		$page = isset( $_GET['page'] ) ? ( '&page=' . $_GET['page'] ) : "";
-		echo "<b>" . __( 'Ready to be renamed.', 'media-file-renamer' ) . " <a href='?" . $page . "&mfrh_scancheck&mfrh_rename=" . $file['post_id'] . "'>" . __( 'Rename now.', 'media-file-renamer' ) . "</a></b><br />";
+		$mfrh_scancheck = ( isset( $_GET ) && isset( $_GET['mfrh_scancheck'] ) ) ? '&mfrh_scancheck' : '';
+		$mfrh_to_rename = ( !empty( $_GET['to_rename'] ) && $_GET['to_rename'] == 1 ) ? '&to_rename=1' : '';
+		echo "<a class='button-primary' href='?" . $page . $mfrh_scancheck . $mfrh_to_rename . "&mfrh_rename=" . $file['post_id'] . "'>" . __( 'Rename now', 'media-file-renamer' ) . "</a><p style='margin-top: 5px; font-size: 9px; line-height: 11px;'>" . sprintf( __( 'Will be renamed to %s.<br />Alternatively, you can modify the title.', 'media-file-renamer' ), $file['desired_filename'] ) . "</p>";
 	}
 }
 
@@ -467,8 +502,13 @@ function mfrh_rename_media( $post, $attachment ) {
 		add_post_meta( $post['ID'], '_original_filename', $old_filename );
 
 	// Rename the main media file.
-	if ( !rename( $old_filepath, $new_filepath ) ) {
-		trigger_error( "Media File Renamer could not find the file" + $old_filepath + ".", E_USER_ERROR );
+	try {
+		if ( !file_exists( $old_filepath ) || !rename( $old_filepath, $new_filepath ) ) {
+			//trigger_error( "Media File Renamer could not find the file" + $old_filepath + ".", E_USER_ERROR );
+			return $post;
+		}
+	}
+	catch (Exception $e) {
 		return $post;
 	}
 	
