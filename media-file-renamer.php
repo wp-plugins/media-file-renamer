@@ -3,7 +3,7 @@
 Plugin Name: Media File Renamer
 Plugin URI: http://www.meow.fr/media-file-renamer
 Description: Renames media files based on their titles and updates the associated posts links.
-Version: 1.2.0
+Version: 1.2.2
 Author: Jordy Meow
 Author URI: http://www.meow.fr
 Remarks: John Godley originaly developed rename-media (http://urbangiraffe.com/plugins/rename-media/), but it wasn't working on Windows, had issues with apostrophes, and was not updating the links in the posts. That's why Media File Renamer exists.
@@ -257,7 +257,7 @@ function mfrh_check_attachment( $id, &$output ) {
 		return false;
 	}
 
-	// Get info
+	// Get information
 	$post = get_post( $id, ARRAY_A );
 	$sanitized_media_title = sanitize_title( $post['post_title'] );
 	$old_filepath = get_attached_file( $post['ID'] );
@@ -265,11 +265,13 @@ function mfrh_check_attachment( $id, &$output ) {
 	
 	// Dead file, let's forget it!
 	if ( !file_exists( $old_filepath ) ) {
+		delete_post_meta( $id, '_require_file_renaming' );
 		return false;
 	}
 
 	// Filename is equal to sanitized title
 	if ( $sanitized_media_title == $path_parts['filename'] ) {
+		delete_post_meta( $id, '_require_file_renaming' );
 		return false;
 	}
 
@@ -285,14 +287,14 @@ function mfrh_check_attachment( $id, &$output ) {
 	$output['desired_filename_exists'] = false;
 	if ( file_exists( $directory . "/" . $desired_filename ) ) {
 		$output['desired_filename_exists'] = true;
-		
 		if ( strtolower( $output['current_filename'] ) == strtolower( $output['desired_filename'] ) ) {
 			// If Windows, let's be careful about the fact that case doesn't affect files
 			delete_post_meta( $post['ID'], '_require_file_renaming' );
 			return false;
 		}
-		
 	}
+
+	// It seems it could be renamed :)
 	if ( !get_post_meta( $post['ID'], '_require_file_renaming' ) ) {
 		add_post_meta( $post['ID'], '_require_file_renaming', true );
 	}
