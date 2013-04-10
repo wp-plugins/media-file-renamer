@@ -39,9 +39,15 @@ function mfrh_admin_init() {
 			array(
                 'name' => 'rename_slug',
                 'label' => __( 'Rename Slug', 'media-file-renamer' ),
-                'desc' => __( 'The image slug will be also renamed.', 'media-file-renamer' ),
+                'desc' => __( 'The image slug will also be renamed.', 'media-file-renamer' ),
                 'type' => 'checkbox',
                 'default' => true
+            ), array(
+                'name' => 'rename_on_save',
+                'label' => __( 'Rename On Save', 'media-file-renamer' ),
+                'desc' => __( 'Attachments will be renamed automatically when published posts/pages are saved.', 'media-file-renamer' ),
+                'type' => 'checkbox',
+                'default' => false
             )
         )
     );

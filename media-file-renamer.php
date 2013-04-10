@@ -35,6 +35,9 @@ add_action( 'add_attachment', 'mfrh_edit_attachment' );
 // Media form is submitted
 add_filter( 'attachment_fields_to_save', 'mfrh_rename_media', 1, 2 );
 
+// Rename media on publish
+add_action( 'save_post', 'mfrh_save_post' );
+
 require( 'jordy_meow_footer.php' );
 require( 'mfrh_settings.php' );
 
@@ -410,6 +413,37 @@ function mfrh_rename_media_files() {
 	jordy_meow_footer();
 }
 
+
+/**
+ *
+ * RENAME ON SAVE / PUBLISH
+ * Originally proposed by Ben Heller
+ * Added and modified by Jordy Meow
+ */
+
+function mfrh_rename_media_on_publish ( $post_id ) {
+	$args = array( 'post_type' => 'attachment', 'numberposts' => -1, 'post_status' =>'any', 'post_parent' => $post_id ); 
+	$attachments = get_posts($args);
+	if ( $attachments ) {
+		foreach ( $attachments as $attachment ) {
+			$attachment = get_post( $attachment, ARRAY_A );
+			mfrh_rename_media( $attachment, $attachment, true );
+		}
+	}
+}
+
+function mfrh_save_post( $post_id ) {
+	if ( mfrh_getoption( "rename_on_save", "mfrh_basics", 'media-file-renamer' ) != 'on' )
+		return;
+	$status = get_post_status( $post_id );
+	if ( !in_array( $status, array( 'publish', 'future' ) ) )
+		return;
+	mfrh_rename_media_on_publish( $post_id );
+	//add_action( 'rename_media_on_publish', 'mfrh_rename_media_on_publish' );
+	//wp_schedule_single_event( time(), 'rename_media_on_publish' );
+}
+
+
 /**
  *
  * EDITOR
@@ -432,7 +466,7 @@ function mfrh_media_send_to_editor( $html, $attachment_id, $attachment ) {
  *
  */
 
-function mfrh_rename_media( $post, $attachment ) {
+function mfrh_rename_media( $post, $attachment, $disableMediaLibraryMode = false ) {
 
 	if ( $post['post_title'] == "" ) {
 		return $post;
@@ -467,7 +501,7 @@ function mfrh_rename_media( $post, $attachment ) {
 	// MEDIA LIBRARY USAGE DETECTION
 	// Detects if the user is using the Media Library or 'Add an Image' (while a post edit)
 	// If it is not the Media Library, we don't rename, to avoid issues
-	$media_library_mode = !isset($attachment['image-size']);
+	$media_library_mode = !isset( $attachment['image-size'] ) || $disableMediaLibraryMode;
 	if ( !$media_library_mode ) {
 		// This media requires renaming
 		if ( !get_post_meta( $post['ID'], '_require_file_renaming' ) )
