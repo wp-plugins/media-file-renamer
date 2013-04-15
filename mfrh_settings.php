@@ -11,6 +11,7 @@ add_action( 'admin_init', 'mfrh_admin_init' );
 function mfrh_settings_page() {
     $settings_api = mfrh_WeDevs_Settings_API::getInstance();
 	echo '<div class="wrap">';
+    jordy_meow_donation();
 	echo "<div id='icon-options-general' class='icon32'><br></div><h2>Media File Renamer</h2>";
     //settings_errors();
     $settings_api->show_navigation();

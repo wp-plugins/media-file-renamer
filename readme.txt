@@ -4,7 +4,7 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_i
 Tags: rename, file, media, management, image, renamer, wpml, wp-retina-2x
 Requires at least: 3.5
 Tested up to: 3.5
-Stable tag: 1.2.2
+Stable tag: 1.3.0
 
 This plugins allows you to rename physically the media files by updating their titles. It also updates theirs links in the posts automatically.
 
@@ -41,6 +41,9 @@ Yes, sure, you can! But since the plugin got popular, I get many emails everyday
 3. Has to be renamed.
 
 == Changelog ==
+
+= 1.3.0 =
+* Add: option to rename the files automatically when a post is published.
 
 = 1.2.2 =
 * Fix: the 'to be renamed' flag was not removed in a few cases.
