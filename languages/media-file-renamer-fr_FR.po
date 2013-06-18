@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: WP Retina 2x\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-04-10 17:15+0900\n"
-"PO-Revision-Date: 2013-04-10 17:18+0900\n"
+"POT-Creation-Date: 2013-06-18 11:51+0900\n"
+"PO-Revision-Date: 2013-06-18 11:51+0900\n"
 "Last-Translator: Jordy Meow <work@meow.fr>\n"
 "Language-Team: Jordy Meow <work@meow.fr>\n"
 "Language: fr_FR\n"
@@ -33,58 +33,62 @@ msgstr "Patientez SVP..."
 msgid "File Renamer"
 msgstr "Renommer"
 
-#: media-file-renamer.php:324
+#: media-file-renamer.php:328
 msgid "Add title"
 msgstr "Ajouter un titre"
 
-#: media-file-renamer.php:324
+#: media-file-renamer.php:328
 msgid "No title for this media, please add one."
 msgstr "Pas de titre pour ce media."
 
-#: media-file-renamer.php:327
+#: media-file-renamer.php:331
 msgid "Edit title"
 msgstr "Modifier le titre"
 
-#: media-file-renamer.php:327
+#: media-file-renamer.php:331
 msgid "Current title already exists."
 msgstr "Le titre existe déjà."
 
-#: media-file-renamer.php:333
+#: media-file-renamer.php:338
 msgid "Rename now"
 msgstr "Renommer maintenant"
 
-#: media-file-renamer.php:333
+#: media-file-renamer.php:338
 #, php-format
-msgid "Will be renamed to %s.<br />Alternatively, you can modify the title."
-msgstr "Sera renommé en %s.<br />Vous pouvez aussi modifier le titre."
+msgid ""
+"Will be renamed to %s.<br />Alternatively, you can <a href=\"%s\">modify the "
+"title</a>."
+msgstr ""
+"Sera renommé en %s.<br />Vous pouvez aussi <a href=\"%s\">modifier le titre</"
+"a>."
 
-#: media-file-renamer.php:355 media-file-renamer.php:359
+#: media-file-renamer.php:360 media-file-renamer.php:364
 #, php-format
 msgid "Rename <span class='mfrh-flagged'>%d</span> flagged media"
 msgstr "Renommer les <span class='mfrh-flagged'>%d</span> fichiers flaggés"
 
-#: media-file-renamer.php:365
+#: media-file-renamer.php:370
 #, php-format
 msgid "Rename all %d media"
 msgstr "Renommer tous les %d fichiers"
 
-#: media-file-renamer.php:376 media-file-renamer.php:379
+#: media-file-renamer.php:381 media-file-renamer.php:384
 msgid "Title"
 msgstr "Titre"
 
-#: media-file-renamer.php:376 media-file-renamer.php:379
+#: media-file-renamer.php:381 media-file-renamer.php:384
 msgid "Current Filename"
 msgstr "Fichier actuel"
 
-#: media-file-renamer.php:376 media-file-renamer.php:379
+#: media-file-renamer.php:381 media-file-renamer.php:384
 msgid "Desired Filename"
 msgstr "Fichier cible"
 
-#: media-file-renamer.php:376 media-file-renamer.php:379
+#: media-file-renamer.php:381 media-file-renamer.php:384
 msgid "Action"
 msgstr "Action"
 
-#: media-file-renamer.php:395
+#: media-file-renamer.php:400
 msgid ""
 "There are no issues.<br />Cool! Let's go visit <a href='http://www."
 "totorotimes.com'>Totoro Times</a> :)"
@@ -92,27 +96,27 @@ msgstr ""
 "Il n'y a aucun problème. Cool ! Allons visiter <a href='http://www."
 "totorotimes.fr'>Totoro Times</a> :)"
 
-#: media-file-renamer.php:401
+#: media-file-renamer.php:406
 msgid "Scan All & List Issues"
 msgstr "Lister les problèmes (rescan)"
 
-#: mfrh_settings.php:34
+#: mfrh_settings.php:35
 msgid "Basics"
 msgstr "Simple"
 
-#: mfrh_settings.php:41
+#: mfrh_settings.php:42
 msgid "Rename Slug"
 msgstr "Renommer Identifiant (slug)"
 
-#: mfrh_settings.php:42
+#: mfrh_settings.php:43
 msgid "The image slug will also be renamed."
 msgstr "L'identifiant (slug) sera également renommé."
 
-#: mfrh_settings.php:47
+#: mfrh_settings.php:48
 msgid "Rename On Save"
 msgstr "Renommer On Save"
 
-#: mfrh_settings.php:48
+#: mfrh_settings.php:49
 msgid ""
 "Attachments will be renamed automatically when published posts/pages are "
 "saved."

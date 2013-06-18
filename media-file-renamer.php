@@ -3,7 +3,7 @@
 Plugin Name: Media File Renamer
 Plugin URI: http://www.meow.fr/media-file-renamer
 Description: Renames media files based on their titles and updates the associated posts links.
-Version: 1.3.2
+Version: 1.3.4
 Author: Jordy Meow
 Author URI: http://www.meow.fr
 Remarks: John Godley originaly developed rename-media (http://urbangiraffe.com/plugins/rename-media/), but it wasn't working on Windows, had issues with apostrophes, and was not updating the links in the posts. That's why Media File Renamer exists.
@@ -251,6 +251,10 @@ function mfrh_is_header_image ( $id ) {
 	return in_array( $id, $headers );
 }
 
+function mfrh_sanitize( $name ) {
+	return str_replace("%", "-", sanitize_title( $name ));
+}
+
 // Return false if everything is fine, otherwise return true with an output.
 function mfrh_check_attachment( $id, &$output ) {
 
@@ -262,7 +266,7 @@ function mfrh_check_attachment( $id, &$output ) {
 
 	// Get information
 	$post = get_post( $id, ARRAY_A );
-	$sanitized_media_title = sanitize_title( $post['post_title'] );
+	$sanitized_media_title = mfrh_sanitize( $post['post_title'] );
 	$old_filepath = get_attached_file( $post['ID'] );
 	$path_parts = pathinfo( $old_filepath );
 	
@@ -480,7 +484,7 @@ function mfrh_rename_media( $post, $attachment, $disableMediaLibraryMode = false
 	}
 
 	// NEW MEDIA FILE INFO (depending on the title of the media)
-	$sanitized_media_title = sanitize_title( $post['post_title'] );
+	$sanitized_media_title = mfrh_sanitize( $post['post_title'] );
 	
 	// MEDIA TITLE & FILE PARTS
 	$meta = wp_get_attachment_metadata( $post['ID'] );
