@@ -3,7 +3,7 @@
 Plugin Name: Media File Renamer
 Plugin URI: http://www.meow.fr/media-file-renamer
 Description: Renames media files based on their titles and updates the associated posts links.
-Version: 1.3.0
+Version: 1.3.2
 Author: Jordy Meow
 Author URI: http://www.meow.fr
 Remarks: John Godley originaly developed rename-media (http://urbangiraffe.com/plugins/rename-media/), but it wasn't working on Windows, had issues with apostrophes, and was not updating the links in the posts. That's why Media File Renamer exists.
@@ -330,7 +330,8 @@ function mfrh_generate_explanation ( $file ) {
 		$page = isset( $_GET['page'] ) ? ( '&page=' . $_GET['page'] ) : "";
 		$mfrh_scancheck = ( isset( $_GET ) && isset( $_GET['mfrh_scancheck'] ) ) ? '&mfrh_scancheck' : '';
 		$mfrh_to_rename = ( !empty( $_GET['to_rename'] ) && $_GET['to_rename'] == 1 ) ? '&to_rename=1' : '';
-		echo "<a class='button-primary' href='?" . $page . $mfrh_scancheck . $mfrh_to_rename . "&mfrh_rename=" . $file['post_id'] . "'>" . __( 'Rename now', 'media-file-renamer' ) . "</a><p style='margin-top: 5px; font-size: 9px; line-height: 11px;'>" . sprintf( __( 'Will be renamed to %s.<br />Alternatively, you can modify the title.', 'media-file-renamer' ), $file['desired_filename'] ) . "</p>";
+		$modify_url = "media.php?attachment_id=" . $file['post_id'] . "&action=edit";
+		echo "<a class='button-primary' href='?" . $page . $mfrh_scancheck . $mfrh_to_rename . "&mfrh_rename=" . $file['post_id'] . "'>" . __( 'Rename now', 'media-file-renamer' ) . "</a><p style='margin-top: 5px; font-size: 9px; line-height: 11px;'>" . sprintf( __( 'Will be renamed to %s.<br />Alternatively, you can <a href="%s">modify the title</a>.', 'media-file-renamer' ), $file['desired_filename'], $modify_url ) . "</p>";
 	}
 }
 
@@ -549,11 +550,13 @@ function mfrh_rename_media( $post, $attachment, $disableMediaLibraryMode = false
 	}
 	
 	// Update the attachment meta
-	$meta['file'] = str_replace( $noext_old_filename, $noext_new_filename, $meta['file'] );
-	if ( isset( $meta["url"] ) && $meta["url"] != "" && count( $meta["url"] ) > 4 )
-		$meta["url"] = str_replace( $noext_old_filename, $noext_new_filename, $meta["url"] );
-	else
-		$meta["url"] = $noext_new_filename . "." . $ext;
+	if ($meta) {
+		$meta['file'] = str_replace( $noext_old_filename, $noext_new_filename, $meta['file'] );
+		if ( isset( $meta["url"] ) && $meta["url"] != "" && count( $meta["url"] ) > 4 )
+			$meta["url"] = str_replace( $noext_old_filename, $noext_new_filename, $meta["url"] );
+		else
+			$meta["url"] = $noext_new_filename . "." . $ext;
+	}
 
 	// Images
 	if ( wp_attachment_is_image( $post['ID'] ) ) {
@@ -593,7 +596,9 @@ function mfrh_rename_media( $post, $attachment, $disableMediaLibraryMode = false
 	delete_post_meta( $post['ID'], '_require_file_renaming' );
 	
 	// Update metadata
-	wp_update_attachment_metadata( $post['ID'], $meta );
+	if ( $meta ) {
+		wp_update_attachment_metadata( $post['ID'], $meta );
+	}
 	update_attached_file( $post['ID'], $new_filepath );
 	
 	// Slug update
@@ -603,7 +608,9 @@ function mfrh_rename_media( $post, $attachment, $disableMediaLibraryMode = false
 	//[TigrouMeow] The GUID should be updated, let's use the post id and the sanitized title.
 	//[alx359] That's not true for post_type=attachments|post_mime_type=image/*. The expected GUID here is [url]
 	//$post['guid'] = $sanitized_media_title . " [" . $post['ID'] . "]";
-	$post['guid'] = $meta["url"];
+	if ( $meta ) {
+		$post['guid'] = $meta["url"];
+	}
 	
 	wp_update_post( $post );
 	if ( !empty( $article ) ) {
