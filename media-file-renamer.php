@@ -613,7 +613,10 @@ function mfrh_rename_media( $post, $attachment, $disableMediaLibraryMode = false
 	//[alx359] That's not true for post_type=attachments|post_mime_type=image/*. The expected GUID here is [url]
 	//$post['guid'] = $sanitized_media_title . " [" . $post['ID'] . "]";
 	if ( $meta ) {
-		$post['guid'] = $meta["url"];
+		//$post['guid'] = $meta["url"];
+		//[Carrasco] With this little change, the GUID is updated fine.
+		$upload_dir = wp_upload_dir();
+		$post['guid'] = $upload_dir['url'] . "/" . $meta["url"];
 	}
 	
 	wp_update_post( $post );
