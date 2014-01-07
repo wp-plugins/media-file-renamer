@@ -3,7 +3,7 @@
 Plugin Name: Media File Renamer
 Plugin URI: http://www.meow.fr/media-file-renamer
 Description: Renames media files based on their titles and updates the associated posts links.
-Version: 1.4.2
+Version: 1.7.0
 Author: Jordy Meow
 Author URI: http://www.meow.fr
 Remarks: John Godley originaly developed rename-media (http://urbangiraffe.com/plugins/rename-media/), but it wasn't working on Windows, had issues with apostrophes, and was not updating the links in the posts. That's why Media File Renamer exists.
@@ -612,12 +612,20 @@ function mfrh_rename_media( $post, $attachment, $disableMediaLibraryMode = false
 	//[TigrouMeow] The GUID should be updated, let's use the post id and the sanitized title.
 	//[alx359] That's not true for post_type=attachments|post_mime_type=image/*. The expected GUID here is [url]
 	//$post['guid'] = $sanitized_media_title . " [" . $post['ID'] . "]";
+	/*
 	if ( $meta ) {
 		//$post['guid'] = $meta["url"];
 		//[Carrasco] With this little change, the GUID is updated fine.
 		$upload_dir = wp_upload_dir();
 		$post['guid'] = $upload_dir['url'] . "/" . $meta["url"];
 	}
+	else {
+		$post['guid'] = $new_filepath;
+	}
+	*/
+	//[TigrouMeow] It the recent version of WordPress, the GUID is not part of the $post (even though it is in database)
+	// The GUID should never be updated.
+	// Explanation: http://pods.io/2013/07/17/dont-use-the-guid-field-ever-ever-ever/
 	
 	wp_update_post( $post );
 	if ( !empty( $article ) ) {

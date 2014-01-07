@@ -3,8 +3,8 @@ Contributors: TigrouMeow
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=JAWE2XWH7ZE5U
 Tags: rename, file, media, management, image, renamer, wpml, wp-retina-2x
 Requires at least: 3.5
-Tested up to: 3.6
-Stable tag: 1.4.2
+Tested up to: 3.8
+Stable tag: 1.7.0
 
 This plugins allows you to rename physically the media files by updating their titles. It also updates theirs links in the posts automatically.
 
@@ -27,6 +27,9 @@ Simply replace `media-file-renamer.php` by the new one.
 
 == Frequently Asked Questions ==
 
+= In the Media Library, the "File name" is wrong! =
+Yes, this is a WordPress issue. This "File name" doesn't come from the real filename but from a database entry called GUID. This GUID should be unique and is only managed by WordPress. Before, the plugin used to modify this GUID accordingly but recently WordPress tries to prevent the plugins to do so. After some research, it appears that modifying this GUID is a very bad idea after all (please check this URL: http://pods.io/2013/07/17/dont-use-the-guid-field-ever-ever-ever/). Media File Manager will not do anything to the GUID from now.
+
 = I donated, can I get rid of the donation button? =
 Of course. I don't like to see too many of those buttons neither ;) You can disable the donation buttons from all my plugins by adding this to your wp-config.php:
 `define('WP_HIDE_DONATION_BUTTONS', true);`
@@ -41,6 +44,9 @@ Yes, sure, you can! But since the plugin got popular, I get many emails everyday
 3. Has to be renamed.
 
 == Changelog ==
+
+= 1.7.0 =
+* Change: removed support for the GUID (and therefore the "File name"). Check the FAQ.
 
 = 1.4 =
 * Fix: GUID issue.
