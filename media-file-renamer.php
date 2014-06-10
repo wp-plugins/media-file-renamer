@@ -3,7 +3,7 @@
 Plugin Name: Media File Renamer
 Plugin URI: http://www.meow.fr/media-file-renamer
 Description: Renames media files based on their titles and updates the associated posts links.
-Version: 1.7.0
+Version: 1.8.0
 Author: Jordy Meow
 Author URI: http://www.meow.fr
 Remarks: John Godley originaly developed rename-media (http://urbangiraffe.com/plugins/rename-media/), but it wasn't working on Windows, had issues with apostrophes, and was not updating the links in the posts. That's why Media File Renamer exists.
@@ -216,7 +216,7 @@ function mfrh_admin_head() {
 }
  
 function mfrh_admin_menu() {
-	add_management_page( 'Media File Renamer', __( 'File Renamer', 'media-file-renamer' ), 'manage_options', 'rename_media_files', 'mfrh_rename_media_files' ); 
+	add_media_page( 'Media File Renamer', __( 'File Renamer', 'media-file-renamer' ), 'manage_options', 'rename_media_files', 'mfrh_rename_media_files' ); 
 	add_options_page( 'Media File Renamer', 'File Renamer', 'manage_options', 'mfrh_settings', 'mfrh_settings_page' );
 }
 
@@ -344,7 +344,7 @@ function mfrh_rename_media_files() {
 	<div class='wrap'>
 	<?php jordy_meow_donation(); ?>
 	<div id="icon-upload" class="icon32"><br></div>
-	<h2>Media File Renamer</h2>
+	<h2>Media File Renamer <?php by_jordy_meow(); ?></h2>
 	
 	<?php
 	$checkFiles = null;
@@ -354,18 +354,18 @@ function mfrh_rename_media_files() {
 	mfrh_file_counter( $flagged, $total, true );
 	?>
 	
-	<div style='margin-top: 12px; background: #EEE; padding: 5px; border-radius: 4px; height: 24px; box-shadow: 0px 0px 3px #575757;'>
+	<div style='margin-top: 12px; background: #FFF; padding: 5px; border-radius: 4px; height: 28px; box-shadow: 0px 0px 6px #C2C2C2;'>
 		<?php if ($flagged > 0) { ?>
 			<a onclick='mfrh_rename_media(false)' id='mfrh_rename_dued_images' class='button-primary'>
 				<?php echo sprintf( __( "Rename <span class='mfrh-flagged'>%d</span> flagged media", 'media-file-renamer' ), $flagged ); ?>
 			</a>
 		<?php } else { ?>
-			<a id='mfrh_rename_dued_images' class='button-secondary'>
+			<a id='mfrh_rename_dued_images' class='button-primary'>
 				<?php echo sprintf( __( "Rename <span class='mfrh-flagged'>%d</span> flagged media", 'media-file-renamer' ), $flagged ); ?>
 			</a>
 		<?php } ?>
 		
-		<a onclick='mfrh_rename_media(true)' id='mfrh_rename_all_images' class='button-secondary' 
+		<a onclick='mfrh_rename_media(true)' id='mfrh_rename_all_images' class='button-primary' 
 			style='margin-left: 10px; margin-right: 10px'>
 			<?php echo sprintf( __( "Rename all %d media", 'media-file-renamer' ), $total ); ?>
 		</a>
