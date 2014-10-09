@@ -4,15 +4,15 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_i
 Tags: rename, file, media, management, image, renamer, wpml, wp-retina-2x
 Requires at least: 3.5
 Tested up to: 4.0
-Stable tag: 1.9.2
+Stable tag: 1.9.4
 
 This plugins allows you to rename physically the media files by updating their titles. It also updates theirs links in the posts automatically.
 
 == Description ==
 
-By updating the name of the image / media, this plugin will rename physically the filename nicely, update all the references to that media in the associated post if there is any (img, src, url...). Using File Renamer (in Tools), you can bulk-rename all your files all at once, or only the flagged files, but it's recommended to do the renaming through the Media Library directly.
+By updating the name of the image or the media, this plugin will rename physically the filename nicely and update all the references to that media in the associated posts if any. Using the File Renamer (Tools), you can bulk-rename all your files all at once, or only the flagged files, but it's recommended to do the renaming through the Media Library directly.
 
-The plugin has been tested with many plugins (including WP Retina 2x and WPML) and supports Windows, Linux, BSD and OSX.
+The plugin has been tested with many plugins (including WP Retina 2x and WPML) and supports Windows, Linux, BSD and OSX. Please check the FAQ as it contains important information and backup your website before using the plugin for the first time.
 
 Languages: English, French.
 
@@ -28,7 +28,12 @@ Simply replace `media-file-renamer.php` by the new one.
 == Frequently Asked Questions ==
 
 = In the Media Library, the "File name" is wrong! =
-Yes, this is a WordPress issue. This "File name" doesn't come from the real filename but from a database entry called GUID. This GUID should be unique and is only managed by WordPress. Before, the plugin used to modify this GUID accordingly but recently WordPress tries to prevent the plugins to do so. After some research, it appears that modifying this GUID is a very bad idea after all (please check this URL: http://pods.io/2013/07/17/dont-use-the-guid-field-ever-ever-ever/). Media File Manager will not do anything to the GUID from now.
+Yes, this is a WordPress issue. This "File name" doesn't come from the real filename but from a database entry called GUID. This GUID should be unique and is only managed by WordPress. Before, the plugin used to modify this GUID accordingly but recently WordPress tries to prevent the plugins to do so. After some research, it appears that modifying this GUID is a very bad idea after all (please check this URL: http://pods.io/2013/07/17/dont-use-the-guid-field-ever-ever-ever/). Media File Manager will not do anything to the GUID from now. In short, don't think this "File name" as an actual filename, it is not. It is an identifier. 
+
+I added an option if you really want to rename that but really, you shouldn't.
+
+= What does the option "Rename on save?" =
+Let's say you modify the titles of your media while editing a post. The plugin cannot rename the files yet, because you are in the process of editing your post and the image links are in there. If that option is checked, when the post is actually saved (drafted, scheduled or published), then the images will be renamed and the links updated. If you don't check this option, you would have to go to the Media Manager and click on the button "Rename Now" next to that image.
 
 = I donated, can I get rid of the donation button? =
 Of course. I don't like to see too many of those buttons neither ;) You can disable the donation buttons from all my plugins by adding this to your wp-config.php:
@@ -44,6 +49,11 @@ Yes, sure, you can! But since the plugin got popular, I get many emails everyday
 3. Has to be renamed.
 
 == Changelog ==
+
+= 1.9.4 =
+* Add: New option to avoid to modify database (no updates, only renaming).
+* Add: New option to force update the GUID (aka "File name"...). Not recommended _at all_.
+* Fix: Options were without effect.
 
 = 1.9.2 =
 * Works with WordPress 4.0.

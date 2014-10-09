@@ -3,7 +3,7 @@
 Plugin Name: Media File Renamer
 Plugin URI: http://www.meow.fr
 Description: Renames media files based on their titles and updates the associated posts links.
-Version: 1.9.2
+Version: 1.9.4
 Author: Jordy Meow
 Author URI: http://www.meow.fr
 Remarks: John Godley originaly developed rename-media (http://urbangiraffe.com/plugins/rename-media/), but it wasn't working on Windows, had issues with apostrophes, and was not updating the links in the posts. That's why Media File Renamer exists.
@@ -438,7 +438,7 @@ function mfrh_rename_media_on_publish ( $post_id ) {
 }
 
 function mfrh_save_post( $post_id ) {
-	if ( mfrh_getoption( "rename_on_save", "mfrh_basics", 'media-file-renamer' ) != 'on' )
+	if ( !mfrh_getoption( "rename_on_save", "mfrh_basics", false ) )
 		return;
 	$status = get_post_status( $post_id );
 	if ( !in_array( $status, array( 'publish', 'future' ) ) )
@@ -606,55 +606,52 @@ function mfrh_rename_media( $post, $attachment, $disableMediaLibraryMode = false
 	update_attached_file( $post['ID'], $new_filepath );
 	
 	// Slug update
-	if ( mfrh_getoption( "rename_slug", "mfrh_basics", 'media-file-renamer' ) === 'on' )
+	if ( mfrh_getoption( "rename_slug", "mfrh_basics", true ) )
 		$post['post_name'] = $sanitized_media_title;
 	
-	//[TigrouMeow] The GUID should be updated, let's use the post id and the sanitized title.
-	//[alx359] That's not true for post_type=attachments|post_mime_type=image/*. The expected GUID here is [url]
-	//$post['guid'] = $sanitized_media_title . " [" . $post['ID'] . "]";
-	/*
-	if ( $meta ) {
-		//$post['guid'] = $meta["url"];
-		//[Carrasco] With this little change, the GUID is updated fine.
-		$upload_dir = wp_upload_dir();
-		$post['guid'] = $upload_dir['url'] . "/" . $meta["url"];
-	}
-	else {
-		$post['guid'] = $new_filepath;
-	}
-	*/
-	//[TigrouMeow] It the recent version of WordPress, the GUID is not part of the $post (even though it is in database)
-	// The GUID should never be updated.
-	// Explanation: http://pods.io/2013/07/17/dont-use-the-guid-field-ever-ever-ever/
-	
 	wp_update_post( $post );
-	if ( !empty( $article ) ) {
-		wp_update_post( $article );
-	}
 	
-	// Mass update of all the articles with the new filenames
-	// For images, we have to go through all the sizes
-	global $wpdb;
-	if ( wp_attachment_is_image( $post['ID'] ) ) {
-		$orig_image_url = $orig_image_urls['full'];
-		$new_image_data = wp_get_attachment_image_src( $post['ID'], 'full' );
-		$new_image_url = $new_image_data[0];
-		$wpdb->query( $wpdb->prepare( "UPDATE $wpdb->posts SET post_content = REPLACE(post_content, '%s', '%s');", $orig_image_url, $new_image_url ) );
-		foreach ( $meta['sizes'] as $size => $meta_size ) {
-			$orig_image_url = $orig_image_urls[$size];
-			$new_image_data = wp_get_attachment_image_src( $post['ID'], $size );
+	if ( !mfrh_getoption( "no_update", "mfrh_basics", false ) ) {
+		// Mass update of all the articles with the new filenames
+		// For images, we have to go through all the sizes
+		global $wpdb;
+		if ( wp_attachment_is_image( $post['ID'] ) ) {
+			$orig_image_url = $orig_image_urls['full'];
+			$new_image_data = wp_get_attachment_image_src( $post['ID'], 'full' );
 			$new_image_url = $new_image_data[0];
 			$wpdb->query( $wpdb->prepare( "UPDATE $wpdb->posts SET post_content = REPLACE(post_content, '%s', '%s');", $orig_image_url, $new_image_url ) );
+			foreach ( $meta['sizes'] as $size => $meta_size ) {
+				$orig_image_url = $orig_image_urls[$size];
+				$new_image_data = wp_get_attachment_image_src( $post['ID'], $size );
+				$new_image_url = $new_image_data[0];
+				$wpdb->query( $wpdb->prepare( "UPDATE $wpdb->posts SET post_content = REPLACE(post_content, '%s', '%s');", $orig_image_url, $new_image_url ) );
+			}
+		} else {
+			$new_attachment_url = wp_get_attachment_url( $post['ID'] );
+			$wpdb->query( $wpdb->prepare( "UPDATE $wpdb->posts SET post_content = REPLACE(post_content, '%s', '%s');", $orig_attachment_url, $new_attachment_url ) );
 		}
-	} else {
-		$new_attachment_url = wp_get_attachment_url( $post['ID'] );
-		$wpdb->query( $wpdb->prepare( "UPDATE $wpdb->posts SET post_content = REPLACE(post_content, '%s', '%s');", $orig_attachment_url, $new_attachment_url ) );
 	}
-	
+
 	// HTTP REFERER set to the new media link
 	if ( isset( $_REQUEST['_wp_original_http_referer'] ) && strpos( $_REQUEST['_wp_original_http_referer'], '/wp-admin/' ) === false ) {
 		$_REQUEST['_wp_original_http_referer'] = get_permalink( $post['ID'] );
 	}
 
+	// The GUID should never be updated but... this will if the option is checked.
+	// [TigrouMeow] It the recent version of WordPress, the GUID is not part of the $post (even though it is in database)
+	// Explanation: http://pods.io/2013/07/17/dont-use-the-guid-field-ever-ever-ever/
+	if ( mfrh_getoption( "rename_guid", "mfrh_basics", false ) ) {
+		if ( $meta ) {
+			$upload_dir = wp_upload_dir();
+			$guid = $upload_dir['url'] . "/" . $meta["url"];
+		}
+		else {
+			$guid = $new_filepath;
+		}
+		global $wpdb;
+		$wpdb->query( $wpdb->prepare( "UPDATE $wpdb->posts SET guid = '%s' WHERE ID = '%s';", $guid, $post['ID'] ) );
+		$post["guid"] = $guid;
+		return null;
+	}
 	return $post;
 }
