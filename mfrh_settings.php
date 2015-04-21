@@ -46,13 +46,13 @@ function mfrh_admin_init() {
             array(
                 'name' => 'rename_slug',
                 'label' => __( 'Rename Slug', 'media-file-renamer' ),
-                'desc' => __( 'The image slug will be renamed.', 'media-file-renamer' ),
+                'desc' => __( 'The image slug will be renamed like the new filename.<br /><small>Better to keep this un-checked as the link might have been referenced somewhere else.</small>', 'media-file-renamer' ),
                 'type' => 'checkbox',
                 'default' => true
             ), array(
                 'name' => 'rename_guid',
                 'label' => __( 'Rename GUID (File name)', 'media-file-renamer' ),
-                'desc' => __( 'The GUID (called File name - see FAQ) will be renamed. Better to keep this un-checked.', 'media-file-renamer' ),
+                'desc' => __( 'The GUID will be renamed like the new filename.<br /><small>Better to keep this un-checked. Have a look a the FAQ.</small>', 'media-file-renamer' ),
                 'type' => 'checkbox',
                 'default' => false
             ), array(
@@ -64,7 +64,7 @@ function mfrh_admin_init() {
             ), array(
                 'name' => 'rename_on_save',
                 'label' => __( 'Rename On Save', 'media-file-renamer' ),
-                'desc' => __( 'Attachments will be renamed automatically when published posts/pages are saved.', 'media-file-renamer' ),
+                'desc' => __( 'Attachments will be renamed automatically when published posts/pages are saved.<br /><small>You can change the names of your media while editing a post but that wouldn\'t let the plugin updates the HTML, of course. With this option, the plugin will check for any changes in the media names and will update your post right after you saved it.</small>', 'media-file-renamer' ),
                 'type' => 'checkbox',
                 'default' => false
             )

@@ -3,8 +3,8 @@ Contributors: TigrouMeow
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=H2S7S3G4XMJ6J
 Tags: rename, file, media, management, image, renamer, wpml, wp-retina-2x
 Requires at least: 3.5
-Tested up to: 4.0
-Stable tag: 1.9.8
+Tested up to: 4.2.0
+Stable tag: 2.0.0
 
 This plugins allows you to rename physically the media files by updating their titles. It also updates theirs links in the posts automatically.
 
@@ -37,6 +37,9 @@ I added an option if you really want to rename that but really, you shouldn't.
 = What does the option "Rename on save?" =
 Let's say you modify the titles of your media while editing a post. The plugin cannot rename the files yet, because you are in the process of editing your post and the image links are in there. If that option is checked, when the post is actually saved (drafted, scheduled or published), then the images will be renamed and the links updated. If you don't check this option, you would have to go to the Media Manager and click on the button "Rename Now" next to that image.
 
+= I am using Woocommerce. After renaming, the featured image for my products are broken. What can I do? =
+You should try to re-generate all the thumbnails. Have a look a this thread: https://wordpress.org/support/topic/plugin-media-file-renamer-used-with-woocommerce-plugin-problems?replies=4
+
 = I donated, can I get rid of the donation button? =
 Of course. I don't like to see too many of those buttons neither ;) You can disable the donation buttons from all my plugins by adding this to your wp-config.php:
 `define('WP_HIDE_DONATION_BUTTONS', true);`
@@ -51,6 +54,9 @@ Yes, sure, you can! But since the plugin got popular, I get many emails everyday
 3. Has to be renamed.
 
 == Changelog ==
+
+= 2.0.0 =
+* Fix: Texts.
 
 = 1.9.8 =
 * Fix: Versioning.
