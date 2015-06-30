@@ -3,18 +3,22 @@ Contributors: TigrouMeow
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=H2S7S3G4XMJ6J
 Tags: rename, file, media, management, image, renamer, wpml, wp-retina-2x
 Requires at least: 3.5
-Tested up to: 4.2.0
-Stable tag: 2.0.0
+Tested up to: 4.2.2
+Stable tag: 2.2.0
 
 This plugins allows you to rename physically the media files by updating their titles. It also updates theirs links in the posts automatically.
 
 == Description ==
 
-By updating the name/title of the image or the media, this plugin will rename the filename nicely and attempt to update all the references to that media in the associated posts if any. Depending on the plugins you use and your settings, the plugin might not find all the references so you need to backup your website first then try. If the references are not being updated, please let me know in the forum with details.
+The Media File Renamer is a WordPress plugin that renames media files nicely for a cleaner system and for a better SEO.
 
-Using the File Renamer in Tools, you can also bulk-rename all your files all at once.
+By default, it does it automatically depending on the title of your media. When files are renamed, the references to it are also updated (posts, pages, custom types). There is also a little dashboard called File Renamer in Media that will help you rename all your files at once.
 
-The plugin has been tested with many plugins (including WP Retina 2x and WPML) and supports Windows, Linux, BSD and OSX. Please check the FAQ as it contains important information and backup your website before using the plugin for the first time.
+The Pro users are given a few more features like manual renaming and advanced logs (SQL queries). An excellent way to use the plugin is to actually let it do the renaming automatically and do it manually for a few files for fine tuning.
+
+BE CAREFUL: File renaming is a dangerous process. Before renaming everything automatically, try to rename a few files first and check if all the references to this file are still alright on your website. Depending on your plugins, theme or specific settings, the plugin might not find all the references. I strongly advise you to backup your database and your uploaded files first. If references aren't updated properly, please contact me with details about it. I will try my best to cover more and more special cases.
+
+This plugin works perfectly with WP Retina 2x (and therefore, the retina files), WPML and many more. Is has been tested in Windows, Linux, BSD and OSX systems.
 
 Languages: English, French.
 
@@ -22,6 +26,7 @@ Languages: English, French.
 
 1. Upload `media-file-renamer.php` to the `/wp-content/plugins/` directory
 2. Activate the plugin through the 'Plugins' menu in WordPress
+3. Try it with one file first! :)
 
 == Upgrade Notice ==
 
@@ -29,23 +34,7 @@ Simply replace `media-file-renamer.php` by the new one.
 
 == Frequently Asked Questions ==
 
-= In the Media Library, the "File name" is wrong! =
-Yes, this is a WordPress issue. This "File name" doesn't come from the real filename but from a database entry called GUID. This GUID should be unique and is only managed by WordPress. Before, the plugin used to modify this GUID accordingly but recently WordPress tries to prevent the plugins to do so. After some research, it appears that modifying this GUID is a very bad idea after all (please check this URL: http://pods.io/2013/07/17/dont-use-the-guid-field-ever-ever-ever/). Media File Manager will not do anything to the GUID from now. In short, don't think this "File name" as an actual filename, it is not. It is an identifier. 
-
-I added an option if you really want to rename that but really, you shouldn't.
-
-= What does the option "Rename on save?" =
-Let's say you modify the titles of your media while editing a post. The plugin cannot rename the files yet, because you are in the process of editing your post and the image links are in there. If that option is checked, when the post is actually saved (drafted, scheduled or published), then the images will be renamed and the links updated. If you don't check this option, you would have to go to the Media Manager and click on the button "Rename Now" next to that image.
-
-= I am using Woocommerce. After renaming, the featured image for my products are broken. What can I do? =
-You should try to re-generate all the thumbnails. Have a look a this thread: https://wordpress.org/support/topic/plugin-media-file-renamer-used-with-woocommerce-plugin-problems?replies=4
-
-= I donated, can I get rid of the donation button? =
-Of course. I don't like to see too many of those buttons neither ;) You can disable the donation buttons from all my plugins by adding this to your wp-config.php:
-`define('WP_HIDE_DONATION_BUTTONS', true);`
-
-= Can I contact you? =
-Yes, sure, you can! But since the plugin got popular, I get many emails everyday which consume almost 10% of my whole lifetime (not kidding! + it's rarely issues coming from the plugin itself). So now I ask you to visit my website <a href='http://www.totorotimes.com'>Totoro Times</a>, pick a page you like, and share it on Facebook, Twitter or your own website. I hope you understand :) Thanks a lot!
+Check the FAQ on the official website, here: http://apps.meow.fr/media-file-renamer/faq//
 
 == Screenshots ==
 
@@ -54,6 +43,13 @@ Yes, sure, you can! But since the plugin got popular, I get many emails everyday
 3. Has to be renamed.
 
 == Changelog ==
+
+= 2.2.0 =
+* Add: Many new options.
+* Add: Pro version.
+* Add: Manual file rename (Pro).
+* Update: Use actions for renaming (to faciliate support for more renaming features).
+* Info: I did a lot of updates in this new version of the plugin and I also added a Pro version (apps.meow.fr/media-file-renamer/). You can buy the Pro version if you wish just to help/support me or if you need specific new features. I did this because I want to pursue the development of this plugin more seriously. I would be also very thankful if you could "Review" the plugin (https://wordpress.org/support/view/plugin-reviews/media-file-renamer), share your current issues with me and also the features you would like the most. Thank you all :)
 
 = 2.0.0 =
 * Fix: Texts.
