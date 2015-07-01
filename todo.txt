@@ -1,5 +1,0 @@
-TODO
-MEDIA FILE RENAMER
-
-Doesn't change the filename field for PDF...
-http://wordpress.org/support/topic/pdf-support?replies=2

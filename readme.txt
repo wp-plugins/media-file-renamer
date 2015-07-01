@@ -4,7 +4,7 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_i
 Tags: rename, file, media, management, image, renamer, wpml, wp-retina-2x
 Requires at least: 3.5
 Tested up to: 4.2.2
-Stable tag: 2.2.0
+Stable tag: 2.2.2
 
 This plugins allows you to rename physically the media files by updating their titles. It also updates theirs links in the posts automatically.
 
@@ -20,6 +20,8 @@ BE CAREFUL: File renaming is a dangerous process. Before renaming everything aut
 
 This plugin works perfectly with WP Retina 2x (and therefore, the retina files), WPML and many more. Is has been tested in Windows, Linux, BSD and OSX systems.
 
+Official website here: http://apps.meow.fr/media-file-renamer/
+
 Languages: English, French.
 
 == Installation ==
@@ -34,7 +36,7 @@ Simply replace `media-file-renamer.php` by the new one.
 
 == Frequently Asked Questions ==
 
-Check the FAQ on the official website, here: http://apps.meow.fr/media-file-renamer/faq//
+Check the FAQ on the official website, here: http://apps.meow.fr/media-file-renamer/faq/
 
 == Screenshots ==
 
@@ -44,12 +46,19 @@ Check the FAQ on the official website, here: http://apps.meow.fr/media-file-rena
 
 == Changelog ==
 
+= 2.2.2 =
+* Add: Option to automatically sync the alternative text with the title.
+* Add: Filters and Actions to allow plugins (or custom code) to customize the renaming.
+* Fix: Avoid to rename file if title is not changed (annoying if you previously manually updated it).
+* Change: Plugin functions are only loaded if the user is using the admin.
+* Info: I did a lot of updates in this new version of the plugin and I also added a Pro version (apps.meow.fr/media-file-renamer/). You can buy the Pro version if you wish just to help/support me or if you need specific new features. I did this because I want to pursue the development of this plugin more seriously.
+* Info: I would be really happy if you could review the plugin (https://wordpress.org/support/view/plugin-reviews/media-file-renamer), share your current issues with me and also the features you would like the most. Thanks a lot :)
+
 = 2.2.0 =
 * Add: Many new options.
 * Add: Pro version.
 * Add: Manual file rename (Pro).
 * Update: Use actions for renaming (to faciliate support for more renaming features).
-* Info: I did a lot of updates in this new version of the plugin and I also added a Pro version (apps.meow.fr/media-file-renamer/). You can buy the Pro version if you wish just to help/support me or if you need specific new features. I did this because I want to pursue the development of this plugin more seriously. I would be also very thankful if you could "Review" the plugin (https://wordpress.org/support/view/plugin-reviews/media-file-renamer), share your current issues with me and also the features you would like the most. Thank you all :)
 
 = 2.0.0 =
 * Fix: Texts.
@@ -61,15 +70,6 @@ Check the FAQ on the official website, here: http://apps.meow.fr/media-file-rena
 * Add: New option to avoid to modify database (no updates, only renaming).
 * Add: New option to force update the GUID (aka "File name"...). Not recommended _at all_.
 * Fix: Options were without effect.
-
-= 1.9.2 =
-* Works with WordPress 4.0.
-
-= 1.9.1 =
-* Works with WordPress 3.9.
-
-= 1.7.0 =
-* Change: removed support for the GUID (and therefore the "File name"). Check the FAQ.
 
 = 1.4 =
 * Fix: GUID issue.
