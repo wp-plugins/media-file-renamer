@@ -3,7 +3,7 @@
 Plugin Name: Media File Renamer
 Plugin URI: http://www.meow.fr
 Description: Renames media files based on their titles and updates the associated posts links.
-Version: 2.2.4
+Version: 2.2.6
 Author: Jordy Meow
 Author URI: http://www.meow.fr
 Remarks: John Godley originaly developed rename-media (http://urbangiraffe.com/plugins/rename-media/), but it wasn't working on Windows, had issues with apostrophes, and was not updating the links in the posts. That's why Media File Renamer exists.
@@ -249,10 +249,6 @@ class Meow_MediaFileRenamer {
 			$headers = $wpdb->get_col( "SELECT post_id FROM $wpdb->postmeta WHERE meta_key = '_wp_attachment_is_custom_header'" );
 		}
 		return in_array( $id, $headers );
-	}
-
-	function sanitize( $name ) {
-		return str_replace( "%", "-", sanitize_title( $name ) );
 	}
 
 	// Return false if everything is fine, otherwise return true with an output.
@@ -739,12 +735,17 @@ class Meow_MediaFileRenamer {
 
 	// NEW MEDIA FILE INFO (depending on the title of the media)
 	function new_filename( $post, $forceFilename = null ) {
+		if ( $forceFilename )
+			$forceFilename = preg_replace( '/\\.[^.\\s]{3,4}$/', '', trim( $forceFilename ) );
 		$force = !empty( $forceFilename );
 		$old_filepath = get_attached_file( $post['ID'] );
 		$path_parts = pathinfo( $old_filepath );
 		$old_filename = $path_parts['basename'];
 		$ext = str_replace( 'jpeg', 'jpg', $path_parts['extension'] );
-		$sanitized_media_title = $force ? trim( $forceFilename ) : $this->sanitize( $post['post_title'] );
+		if ( $force )
+			$sanitized_media_title = $forceFilename;
+		else
+			$sanitized_media_title = str_replace( "%", "-", sanitize_title( $post['post_title'] ) );
 		if ( empty( $sanitized_media_title ) )
 			$sanitized_media_title = "empty";
 		$sanitized_media_title = $sanitized_media_title . '.' . $ext;

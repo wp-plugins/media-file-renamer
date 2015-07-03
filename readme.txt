@@ -4,7 +4,7 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_i
 Tags: rename, file, media, management, image, renamer, wpml, wp-retina-2x
 Requires at least: 3.5
 Tested up to: 4.2.2
-Stable tag: 2.2.4
+Stable tag: 2.2.6
 
 This plugins allows you to rename physically the media files by updating their titles. It also updates theirs links in the posts automatically.
 
@@ -46,12 +46,15 @@ Check the FAQ on the official website, here: http://apps.meow.fr/media-file-rena
 
 == Changelog ==
 
+= 2.2.6 =
+* Fix: Double extension issue with manual renaming.
+* Info: I would be also really happy if you could review the plugin (https://wordpress.org/support/view/plugin-reviews/media-file-renamer), share your current issues with me and also the features you would like the most. Thanks a lot! :)
+
 = 2.2.4 =
 * Fix: Couldn't rename automatically the files without changing the titles, now the feature is back.
 * Fix: Better 'explanations' before renaming.
 * Fix: Should work with WPML Media now.
 * Fix: Manage empty filenames by naming them 'empty'.
-* Info: I did a lot of updates in this new version of the plugin and I also added a Pro version (apps.meow.fr/media-file-renamer/). You can buy the Pro version if you wish just to help/support me or if you need specific new features. I did this because I want to pursue the development of this plugin more seriously. I would be also really happy if you could review the plugin (https://wordpress.org/support/view/plugin-reviews/media-file-renamer), share your current issues with me and also the features you would like the most. Thanks a lot! :)
 
 = 2.2.2 =
 * Add: Option to automatically sync the alternative text with the title.
