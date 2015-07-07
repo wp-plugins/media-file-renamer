@@ -4,7 +4,7 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_i
 Tags: rename, file, media, management, image, renamer, wpml, wp-retina-2x
 Requires at least: 3.5
 Tested up to: 4.2.2
-Stable tag: 2.2.8
+Stable tag: 2.3.0
 
 This plugins allows you to rename physically the media files by updating their titles. It also updates theirs links in the posts automatically.
 
@@ -12,7 +12,7 @@ This plugins allows you to rename physically the media files by updating their t
 
 The Media File Renamer is a WordPress plugin that renames media files nicely for a cleaner system and for a better SEO.
 
-By default, it does it automatically depending on the title of your media. When files are renamed, the references to it are also updated (posts, pages, custom types). There is also a little dashboard called File Renamer in Media that will help you rename all your files at once.
+By default, it does it automatically depending on the title of your media. When files are renamed, the references to it are also updated (posts, pages, custom types and their metadata). There is also a little dashboard called File Renamer in Media that will help you rename all your files at once.
 
 The Pro users are given a few more features like manual renaming and advanced logs (SQL queries). An excellent way to use the plugin is to actually let it do the renaming automatically and do it manually for a few files for fine tuning.
 
@@ -46,9 +46,12 @@ Check the FAQ on the official website, here: http://apps.meow.fr/media-file-rena
 
 == Changelog ==
 
+= 2.3.0 =
+* Add: Update the metadata (true by default).
+* Info: I would be also really happy if you could review the plugin (https://wordpress.org/support/view/plugin-reviews/media-file-renamer), share your current issues with me and also the features you would like the most. Thanks a lot! :)
+
 = 2.2.8 =
 * Fix: Guid was renamed wrongly in one rare case.
-* Info: I would be also really happy if you could review the plugin (https://wordpress.org/support/view/plugin-reviews/media-file-renamer), share your current issues with me and also the features you would like the most. Thanks a lot! :)
 
 = 2.2.6 =
 * Fix: Double extension issue with manual renaming.

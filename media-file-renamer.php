@@ -3,7 +3,7 @@
 Plugin Name: Media File Renamer
 Plugin URI: http://www.meow.fr
 Description: Renames media files based on their titles and updates the associated posts links.
-Version: 2.2.8
+Version: 2.3.0
 Author: Jordy Meow
 Author URI: http://www.meow.fr
 Remarks: John Godley originaly developed rename-media (http://urbangiraffe.com/plugins/rename-media/), but it wasn't working on Windows, had issues with apostrophes, and was not updating the links in the posts. That's why Media File Renamer exists.
@@ -610,10 +610,15 @@ class Meow_MediaFileRenamer {
 		if ( $rename_slug === null )
 				$this->setoption( 'rename_slug', 'mfrh_basics', 'on' );
 
-		// Default Rename Slug
+		// Default Update Posts
 		$update_posts = $this->getoption( 'update_posts', 'mfrh_basics', null );
 		if ( $update_posts === null )
 				$this->setoption( 'update_posts', 'mfrh_basics', 'on' );
+
+		// Default Post Meta
+		$update_postmeta = $this->getoption( 'update_postmeta', 'mfrh_basics', null );
+		if ( $update_postmeta === null )
+				$this->setoption( 'update_postmeta', 'mfrh_basics', 'on' );
 
 		if ( isset( $_POST ) && isset( $_POST['mfrh_pro'] ) )
 				$this->validate_pro( $_POST['mfrh_pro']['subscr_id'] );
@@ -655,9 +660,15 @@ class Meow_MediaFileRenamer {
 						'type' => 'checkbox',
 						'default' => false
 				), array(
+						'name' => 'update_postmeta',
+						'label' => __( 'Update Post Meta', 'media-file-renamer' ),
+						'desc' => __( 'Update the references in the posts metadata (including pages and custom types metadata).', 'media-file-renamer' ),
+						'type' => 'checkbox',
+						'default' => false
+				), array(
 						'name' => 'update_something',
-						'label' => __( 'Update XYZ', 'media-file-renamer' ),
-						'desc' => __( '<i>Something is not updated when you rename a file? Please contact me and I will add support for it.</i>', 'media-file-renamer' ),
+						'label' => __( '', 'media-file-renamer' ),
+						'desc' => __( '<i>Something is not updated when you rename a file? Please <a href="mailto:apps@meow.fr">contact me</a> and I will add support for it.</i>', 'media-file-renamer' ),
 						'type' => 'html',
 						'default' => false
 				), array(
@@ -962,14 +973,16 @@ class Meow_MediaFileRenamer {
 
 	// Register internal actions
 	function init_actions() {
+		if ( $this->getoption( "update_posts", "mfrh_basics", true ) )
+			add_action( 'mfrh_url_renamed', array( $this, 'action_update_posts' ), 10, 3 );
+		if ( $this->getoption( "update_postmeta", "mfrh_basics", true ) )
+			add_action( 'mfrh_url_renamed', array( $this, 'action_update_postmeta' ), 10, 3 );
 		if ( $this->getoption( "rename_slug", "mfrh_basics", true ) )
 			add_action( 'mfrh_media_renamed', array( $this, 'action_update_slug' ), 10, 3 );
 		if ( $this->getoption( "sync_alt", "mfrh_basics", false ) && $this->is_pro() )
 			add_action( 'mfrh_media_renamed', array( $this, 'action_sync_alt' ), 10, 3 );
 		if ( $this->getoption( "rename_guid", "mfrh_basics", false ) )
 			add_action( 'mfrh_media_renamed', array( $this, 'action_rename_guid' ), 10, 3 );
-		if ( $this->getoption( "update_posts", "mfrh_basics", true ) )
-			add_action( 'mfrh_url_renamed', array( $this, 'action_update_posts' ), 10, 3 );
 
 		// Filter for testing:
 		//add_filter( 'mfrh_new_filename', array( $this, 'filter_filename' ), 10, 3 );
@@ -1007,8 +1020,7 @@ class Meow_MediaFileRenamer {
 		$old_guid = get_the_guid( $post['ID'] );
 		if ( $meta ) {
 			$upload_dir = wp_upload_dir();
-			//$new_filepath = $upload_dir['url'] . "/" . $meta["url"];
-			$new_filepath = $upload_dir['baseurl'] . "/" . $meta["file"];
+			$new_filepath = wp_get_attachment_url( $post['ID'] );
 		}
 		global $wpdb;
 		$query = $wpdb->prepare( "UPDATE $wpdb->posts SET guid = '%s' WHERE ID = '%d'", $new_filepath,  $post['ID'] );
@@ -1019,6 +1031,16 @@ class Meow_MediaFileRenamer {
 		$this->log( "Guid $old_guid changed to $new_filepath." );
 	}
 
+	// Mass update of all the meta with the new filenames
+	function action_update_postmeta( $post, $orig_image_url, $new_image_url ) {
+		global $wpdb;
+		$query = $wpdb->prepare( "UPDATE $wpdb->postmeta SET meta_value = '%s' WHERE meta_key <> '_original_filename' AND TRIM(meta_value) = '%s';", $new_image_url, $orig_image_url );
+		$query_revert = $wpdb->prepare( "UPDATE $wpdb->postmeta SET meta_value = '%s' WHERE meta_key <> '_original_filename' AND meta_value = '%s';", $orig_image_url, $new_image_url );
+		$wpdb->query( $query );
+		$this->log_sql( $query, $query_revert );
+		$this->log( "Metadata exactly like $orig_image_url were replaced by $new_image_url." );
+	}
+
 	// Mass update of all the articles with the new filenames
 	function action_update_posts( $post, $orig_image_url, $new_image_url ) {
 		global $wpdb;
@@ -1026,6 +1048,7 @@ class Meow_MediaFileRenamer {
 		$query_revert = $wpdb->prepare( "UPDATE $wpdb->posts SET post_content = REPLACE(post_content, '%s', '%s');", $new_image_url, $orig_image_url );
 		$wpdb->query( $query );
 		$this->log_sql( $query, $query_revert );
+		$this->log( "Post content like $orig_image_url were replaced by $new_image_url." );
 	}
 }
 
