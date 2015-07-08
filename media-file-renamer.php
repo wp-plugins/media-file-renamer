@@ -1034,7 +1034,7 @@ class Meow_MediaFileRenamer {
 	// Mass update of all the meta with the new filenames
 	function action_update_postmeta( $post, $orig_image_url, $new_image_url ) {
 		global $wpdb;
-		$query = $wpdb->prepare( "UPDATE $wpdb->postmeta SET meta_value = '%s' WHERE meta_key <> '_original_filename' AND TRIM(meta_value) = '%s';", $new_image_url, $orig_image_url );
+		$query = $wpdb->prepare( "UPDATE $wpdb->postmeta SET meta_value = '%s' WHERE meta_key <> '_original_filename' AND (TRIM(meta_value) = '%s' OR TRIM(meta_value) = '%s');", $new_image_url, $orig_image_url, str_replace( ' ', '%20', $orig_image_url ) );
 		$query_revert = $wpdb->prepare( "UPDATE $wpdb->postmeta SET meta_value = '%s' WHERE meta_key <> '_original_filename' AND meta_value = '%s';", $orig_image_url, $new_image_url );
 		$wpdb->query( $query );
 		$this->log_sql( $query, $query_revert );
