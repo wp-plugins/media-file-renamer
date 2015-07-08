@@ -4,7 +4,7 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_i
 Tags: rename, file, media, management, image, renamer, wpml, wp-retina-2x
 Requires at least: 3.5
 Tested up to: 4.2.2
-Stable tag: 2.3.0
+Stable tag: 2.3.2
 
 This plugins allows you to rename physically the media files by updating their titles. It also updates theirs links in the posts automatically.
 
@@ -36,7 +36,17 @@ Simply replace `media-file-renamer.php` by the new one.
 
 == Frequently Asked Questions ==
 
-Check the FAQ on the official website, here: http://apps.meow.fr/media-file-renamer/faq/
+Check the FAQ on the official website, here: http://apps.meow.fr/media-file-renamer/faq/.
+
+If you are a developer and willing to customize the way the file are renamed, please use the mfrh_new_filename filter. The $new is the new filename proposed by the plugin, $old is the previous one and $post contains the information about the current attachment.
+
+`
+add_filter( 'mfrh_new_filename', array( $this, 'filter_filename' ), 10, 3 );
+
+function filter_filename( $new, $old, $post ) {
+  return "renamed-" . $new;
+}
+`
 
 == Screenshots ==
 
@@ -46,9 +56,12 @@ Check the FAQ on the official website, here: http://apps.meow.fr/media-file-rena
 
 == Changelog ==
 
+= 2.3.2 =
+* Add: Metadata containing '%20' instead of spaces are now considered too during the renaming.
+* Info: I would be also really happy if you could review the plugin (https://wordpress.org/support/view/plugin-reviews/media-file-renamer), share your current issues with me and also the features you would like the most. Thanks a lot! :)
+
 = 2.3.0 =
 * Add: Update the metadata (true by default).
-* Info: I would be also really happy if you could review the plugin (https://wordpress.org/support/view/plugin-reviews/media-file-renamer), share your current issues with me and also the features you would like the most. Thanks a lot! :)
 
 = 2.2.8 =
 * Fix: Guid was renamed wrongly in one rare case.
