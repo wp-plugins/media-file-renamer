@@ -3,7 +3,7 @@
 Plugin Name: Media File Renamer
 Plugin URI: http://www.meow.fr
 Description: Renames media files based on their titles and updates the associated posts links.
-Version: 2.3.2
+Version: 2.3.4
 Author: Jordy Meow
 Author URI: http://www.meow.fr
 Remarks: John Godley originaly developed rename-media (http://urbangiraffe.com/plugins/rename-media/), but it wasn't working on Windows, had issues with apostrophes, and was not updating the links in the posts. That's why Media File Renamer exists.
@@ -40,8 +40,10 @@ class Meow_MediaFileRenamer {
 		add_action( 'save_post', array( $this, 'save_post' ) );
 
 		// Column for Media Library
-		add_filter( 'manage_media_columns', array( $this, 'add_media_columns' ) );
-		add_action( 'manage_media_custom_column', array( $this, 'manage_media_custom_column' ), 10, 2 );
+		if ( $this->getoption( 'auto_rename', 'mfrh_basics', false ) ) {
+			add_filter( 'manage_media_columns', array( $this, 'add_media_columns' ) );
+			add_action( 'manage_media_custom_column', array( $this, 'manage_media_custom_column' ), 10, 2 );
+		}
 
 		// Media Library
 		add_filter( 'views_upload', array( $this, 'views_upload' ) );
@@ -202,7 +204,9 @@ class Meow_MediaFileRenamer {
 	}
 
 	function admin_menu() {
-		add_media_page( 'Media File Renamer', __( 'File Renamer', 'media-file-renamer' ), 'manage_options', 'rename_media_files', array( $this, 'rename_media_files' ) );
+		if ( $this->getoption( 'auto_rename', 'mfrh_basics', false ) ) {
+			add_media_page( 'Media File Renamer', __( 'File Renamer', 'media-file-renamer' ), 'manage_options', 'rename_media_files', array( $this, 'rename_media_files' ) );
+		}
 		add_options_page( 'Media File Renamer', 'File Renamer', 'manage_options', 'mfrh_settings', array( $this, 'settings_page' ) );
 	}
 
@@ -253,6 +257,10 @@ class Meow_MediaFileRenamer {
 
 	// Return false if everything is fine, otherwise return true with an output.
 	function check_attachment( $id, &$output ) {
+		if ( !$this->getoption( 'auto_rename', 'mfrh_basics', false ) ) {
+			delete_post_meta( $id, '_require_file_renaming' );
+			return false;
+		}
 		if ( get_post_meta( $id, '_manual_file_renaming', true ) )
 			return false;
 		// Skip header images
@@ -463,13 +471,15 @@ class Meow_MediaFileRenamer {
 	}
 
 	function attachment_save( $post, $attachment ) {
+		$autorename = $this->getoption( 'auto_rename', 'mfrh_basics', false );
 		$info = pathinfo( get_attached_file( $post['ID'] ) );
 		$basename = $info['basename'];
 		$new = $post['mfrh_new_filename'];
 		if ( !empty( $new ) && $basename !== $new )
 			return $this->rename_media( $post, $attachment, false, $new );
-		else
+		else if ( $autorename )
 			return $this->rename_media( $post, $attachment, false, null );
+		return $post;
 	}
 
 	function log_sql( $data, $antidata ) {
