@@ -3,7 +3,7 @@
 Plugin Name: Media File Renamer
 Plugin URI: http://www.meow.fr
 Description: Renames media files based on their titles and updates the associated posts links.
-Version: 2.3.4
+Version: 2.3.6
 Author: Jordy Meow
 Author URI: http://www.meow.fr
 Remarks: John Godley originaly developed rename-media (http://urbangiraffe.com/plugins/rename-media/), but it wasn't working on Windows, had issues with apostrophes, and was not updating the links in the posts. That's why Media File Renamer exists.
@@ -115,13 +115,13 @@ class Meow_MediaFileRenamer {
 	}
 
 	function manage_media_custom_column( $column_name, $id ) {
-			if ( $column_name == 'mfrh_column' ) {
+		if ( $column_name == 'mfrh_column' ) {
 			if ( $this->check_attachment( $id, $output ) ) {
 				$this->generate_explanation( $output );
 			} else {
 				echo "<a href='post.php?post=" . $id . "&action=edit''><img style='margin-bottom: 2px; width: 16px; height: 16px;' src='" . trailingslashit( WP_PLUGIN_URL ) . trailingslashit( 'media-file-renamer/img') . "tick-circle.png' /></a>";
 			}
-			}
+		}
 	}
 
 	function admin_head() {
@@ -525,6 +525,7 @@ class Meow_MediaFileRenamer {
 		require_once ABSPATH . WPINC . '/class-IXR.php';
 		require_once ABSPATH . WPINC . '/class-wp-http-ixr-client.php';
 		$client = new WP_HTTP_IXR_Client( 'http://apps.meow.fr/xmlrpc.php' );
+		$client->useragent = 'MeowApps';
 		if ( !$client->query( 'meow_sales.auth', $subscr_id, 'media-file-renamer', get_site_url() ) ) {
 			update_option( 'mfrh_pro_serial', "" );
 			update_option( 'mfrh_pro_status', "A network error: " . $client->getErrorMessage() );
@@ -630,6 +631,11 @@ class Meow_MediaFileRenamer {
 		if ( $update_postmeta === null )
 				$this->setoption( 'update_postmeta', 'mfrh_basics', 'on' );
 
+		// Default UTF-8
+		$update_postmeta = $this->getoption( 'utf8_filename', 'mfrh_basics', null );
+		if ( $update_postmeta === null )
+				$this->setoption( 'utf8_filename', 'mfrh_basics', 'off' );
+
 		if ( isset( $_POST ) && isset( $_POST['mfrh_pro'] ) )
 				$this->validate_pro( $_POST['mfrh_pro']['subscr_id'] );
 		$pro_status = get_option( 'mfrh_pro_status', "Not Pro." );
@@ -711,6 +717,12 @@ class Meow_MediaFileRenamer {
 						'type' => 'checkbox',
 						'default' => false
 				), array(
+						'name' => 'utf8_filename',
+						'label' => __( 'UTF-8 Filename (Pro)', 'media-file-renamer' ),
+						'desc' => __( 'The plugin will be allowed to use non-ASCII characters in the filenames.<br /><small>This usually doesn\'t work well on Windows installs.</small>', 'media-file-renamer' ),
+						'type' => 'checkbox',
+						'default' => false
+				), array(
 						'name' => 'log',
 						'label' => __( 'Logs', 'media-file-renamer' ),
 						'desc' => __( 'Simple logging that explains which actions has been run. The file is <a target="_blank" href="' . plugins_url("media-file-renamer") . '/media-file-renamer.log">media-file-renamer.log</a>.', 'media-file-renamer' ),
@@ -765,8 +777,10 @@ class Meow_MediaFileRenamer {
 		$ext = str_replace( 'jpeg', 'jpg', $path_parts['extension'] );
 		if ( $force )
 			$sanitized_media_title = $forceFilename;
-		else
-			$sanitized_media_title = str_replace( "%", "-", sanitize_title( $post['post_title'] ) );
+		else {
+			$utf8_filename = $this->getoption( 'utf8_filename', 'mfrh_basics', null ) && $this->is_pro();
+			$sanitized_media_title = $utf8_filename ? sanitize_file_name( $post['post_title'] ) : str_replace( "%", "-", sanitize_title( $post['post_title'] ) );
+		}
 		if ( empty( $sanitized_media_title ) )
 			$sanitized_media_title = "empty";
 		$sanitized_media_title = $sanitized_media_title . '.' . $ext;
