@@ -58,11 +58,11 @@ function filter_filename( $new, $old, $post ) {
 
 = 2.3.6 =
 * Add: UTF-8 support for renaming files. Before playing with this, give it a try. Windows-based hosting service will probably not work well with this.
+* Info: I would be also really happy if you could review the plugin (https://wordpress.org/support/view/plugin-reviews/media-file-renamer), share your current issues with me and also the features you would like the most. Thanks a lot! :)
 
 = 2.3.4 =
 * Fix: Auto-Rename was renaming files even though it was disabled.
 * Update: If Auto-Rename is disabled, the Media Library column is not shown anymore, neither is the dashboard (they are useless in that case).
-* Info: I would be also really happy if you could review the plugin (https://wordpress.org/support/view/plugin-reviews/media-file-renamer), share your current issues with me and also the features you would like the most. Thanks a lot! :)
 
 = 2.3.2 =
 * Add: Metadata containing '%20' instead of spaces are now considered too during the renaming.
