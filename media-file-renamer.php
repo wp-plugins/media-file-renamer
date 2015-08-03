@@ -2,11 +2,10 @@
 /*
 Plugin Name: Media File Renamer
 Plugin URI: http://www.meow.fr
-Description: Renames media files based on their titles and updates the associated posts links.
-Version: 2.3.8
+Description: Renames media files automatically based on their titles and updates the references.
+Version: 2.4.0
 Author: Jordy Meow
 Author URI: http://www.meow.fr
-Remarks: John Godley originaly developed rename-media (http://urbangiraffe.com/plugins/rename-media/), but it wasn't working on Windows, had issues with apostrophes, and was not updating the links in the posts. That's why Media File Renamer exists.
 
 Dual licensed under the MIT and GPL licenses:
 http://www.opensource.org/licenses/mit-license.php
@@ -793,6 +792,15 @@ class Meow_MediaFileRenamer {
 		return $sanitized_media_title;
 	}
 
+	// Only replace the first occurence
+	function str_replace( $needle, $replace, $haystack ) {
+		$pos = strpos( $haystack, $needle );
+		if ( $pos !== false ) {
+		    $haystack = substr_replace( $haystack, $replace, $pos, strlen( $needle ) );
+		}
+		return $haystack;
+	}
+
 	function rename_media( $post, $attachment, $disableMediaLibraryMode = false, $forceFilename = null ) {
 		$force = !empty( $forceFilename );
 		$manual = get_post_meta( $post['ID'], '_manual_file_renaming', true );
@@ -901,14 +909,14 @@ class Meow_MediaFileRenamer {
 		}
 
 		// Filenames without extensions
-		$noext_old_filename = str_replace( '.' . $old_ext, '', $old_filename );
-		$noext_new_filename = str_replace( '.' . $ext, '', $sanitized_media_title );
+		$noext_old_filename = $this->str_replace( '.' . $old_ext, '', $old_filename );
+		$noext_new_filename = $this->str_replace( '.' . $ext, '', $sanitized_media_title );
 
 		// Update the attachment meta
 		if ($meta) {
-			$meta['file'] = str_replace( $noext_old_filename, $noext_new_filename, $meta['file'] );
+			$meta['file'] = $this->str_replace( $noext_old_filename, $noext_new_filename, $meta['file'] );
 			if ( isset( $meta["url"] ) && $meta["url"] != "" && count( $meta["url"] ) > 4 )
-				$meta["url"] = str_replace( $noext_old_filename, $noext_new_filename, $meta["url"] );
+				$meta["url"] = $this->str_replace( $noext_old_filename, $noext_new_filename, $meta["url"] );
 			else
 				$meta["url"] = $noext_new_filename . "." . $ext;
 		}
@@ -922,7 +930,7 @@ class Meow_MediaFileRenamer {
 			foreach ( $meta['sizes'] as $size => $meta_size ) {
 				$meta_old_filename = $meta['sizes'][$size]['file'];
 				$meta_old_filepath = trailingslashit( $directory ) . $meta_old_filename;
-				$meta_new_filename = str_replace( $noext_old_filename, $noext_new_filename, $meta_old_filename );
+				$meta_new_filename = $this->str_replace( $noext_old_filename, $noext_new_filename, $meta_old_filename );
 				$meta_new_filepath = trailingslashit( $directory ) . $meta_new_filename;
 				$orig_image_data = wp_get_attachment_image_src( $post['ID'], $size );
 				$orig_image_urls[$size] = $orig_image_data[0];
@@ -931,8 +939,8 @@ class Meow_MediaFileRenamer {
 					|| is_writable( $meta_new_filepath ) ) ) {
 					// WP Retina 2x is detected, let's rename those files as well
 					if ( function_exists( 'wr2x_generate_images' ) ) {
-						$wr2x_old_filepath = str_replace( '.' . $ext, '@2x.' . $ext, $meta_old_filepath );
-						$wr2x_new_filepath = str_replace( '.' . $ext, '@2x.' . $ext, $meta_new_filepath );
+						$wr2x_old_filepath = $this->str_replace( '.' . $ext, '@2x.' . $ext, $meta_old_filepath );
+						$wr2x_new_filepath = $this->str_replace( '.' . $ext, '@2x.' . $ext, $meta_new_filepath );
 						if ( file_exists( $wr2x_old_filepath ) && ( (!file_exists( $wr2x_new_filepath ) ) || is_writable( $wr2x_new_filepath ) ) ) {
 							rename( $wr2x_old_filepath, $wr2x_new_filepath );
 							$this->log( "Retina file $wr2x_old_filepath renamed to $wr2x_new_filepath." );
