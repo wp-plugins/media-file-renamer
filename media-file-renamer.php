@@ -3,9 +3,11 @@
 Plugin Name: Media File Renamer
 Plugin URI: http://www.meow.fr
 Description: Renames media files automatically based on their titles and updates the references.
-Version: 2.4.0
+Version: 2.4.2
 Author: Jordy Meow
 Author URI: http://www.meow.fr
+Text Domain: media-file-renamer
+Domain Path: /languages
 
 Dual licensed under the MIT and GPL licenses:
 http://www.opensource.org/licenses/mit-license.php
@@ -493,7 +495,9 @@ class Meow_MediaFileRenamer {
 		fclose( $fh_anti );
 	}
 
-	function log( $data ) {
+	function log( $data, $inErrorLog = false ) {
+		if ( $inErrorLog )
+			error_log( $data );
 		if ( !$this->getoption( 'log', 'mfrh_basics', false ) )
 			return;
 		$fh = fopen( trailingslashit( WP_PLUGIN_DIR ) . 'media-file-renamer/media-file-renamer.log', 'a' );
@@ -778,7 +782,11 @@ class Meow_MediaFileRenamer {
 		$old_filepath = get_attached_file( $post['ID'] );
 		$path_parts = pathinfo( $old_filepath );
 		$old_filename = $path_parts['basename'];
-		$ext = str_replace( 'jpeg', 'jpg', $path_parts['extension'] );
+		// This line is problematic during the further rename that exclude the extensions. Better to implement
+		// this properly with thorough testing later.
+		//$ext = str_replace( 'jpeg', 'jpg', $path_parts['extension'] ); // In case of a jpeg extension, rename it to jpg
+		$ext = $path_parts['extension'];
+
 		if ( $force )
 			$sanitized_media_title = $forceFilename;
 		else {
@@ -813,7 +821,11 @@ class Meow_MediaFileRenamer {
 		$directory = $path_parts['dirname']; // '2011/01'
 		$old_filename = $path_parts['basename']; // 'whatever.jpeg'
 		$old_ext = $path_parts['extension'];
-		$ext = str_replace( 'jpeg', 'jpg', $path_parts['extension'] ); // In case of a jpeg extension, rename it to jpg
+
+		// This line is problematic during the further rename that exclude the extensions. Better to implement
+		// this properly with thorough testing later.
+		//$ext = str_replace( 'jpeg', 'jpg', $path_parts['extension'] ); // In case of a jpeg extension, rename it to jpg
+		$ext = $path_parts['extension'];
 
 		$this->log( "** Rename Media: " . $old_filename );
 
@@ -927,33 +939,39 @@ class Meow_MediaFileRenamer {
 			$orig_image_urls = array();
 			$orig_image_data = wp_get_attachment_image_src( $post['ID'], 'full' );
 			$orig_image_urls['full'] = $orig_image_data[0];
-			foreach ( $meta['sizes'] as $size => $meta_size ) {
-				$meta_old_filename = $meta['sizes'][$size]['file'];
-				$meta_old_filepath = trailingslashit( $directory ) . $meta_old_filename;
-				$meta_new_filename = $this->str_replace( $noext_old_filename, $noext_new_filename, $meta_old_filename );
-				$meta_new_filepath = trailingslashit( $directory ) . $meta_new_filename;
-				$orig_image_data = wp_get_attachment_image_src( $post['ID'], $size );
-				$orig_image_urls[$size] = $orig_image_data[0];
-				// ak: Double check files exist before trying to rename.
-				if ( file_exists( $meta_old_filepath ) && ( ( !file_exists( $meta_new_filepath ) )
-					|| is_writable( $meta_new_filepath ) ) ) {
-					// WP Retina 2x is detected, let's rename those files as well
-					if ( function_exists( 'wr2x_generate_images' ) ) {
-						$wr2x_old_filepath = $this->str_replace( '.' . $ext, '@2x.' . $ext, $meta_old_filepath );
-						$wr2x_new_filepath = $this->str_replace( '.' . $ext, '@2x.' . $ext, $meta_new_filepath );
-						if ( file_exists( $wr2x_old_filepath ) && ( (!file_exists( $wr2x_new_filepath ) ) || is_writable( $wr2x_new_filepath ) ) ) {
-							rename( $wr2x_old_filepath, $wr2x_new_filepath );
-							$this->log( "Retina file $wr2x_old_filepath renamed to $wr2x_new_filepath." );
-							do_action( 'mfrh_path_renamed', $post, $wr2x_old_filepath, $wr2x_new_filepath );
+			if ( empty( $meta['sizes'] ) ) {
+				$this->log( "The WP metadata for attachment " . $post['ID'] . " does not exist.", true );
+			}
+			else {
+				foreach ( $meta['sizes'] as $size => $meta_size ) {
+					$meta_old_filename = $meta['sizes'][$size]['file'];
+					$meta_old_filepath = trailingslashit( $directory ) . $meta_old_filename;
+					$meta_new_filename = $this->str_replace( $noext_old_filename, $noext_new_filename, $meta_old_filename );
+					$meta_new_filepath = trailingslashit( $directory ) . $meta_new_filename;
+					$orig_image_data = wp_get_attachment_image_src( $post['ID'], $size );
+					$orig_image_urls[$size] = $orig_image_data[0];
+					// ak: Double check files exist before trying to rename.
+					if ( file_exists( $meta_old_filepath ) && ( ( !file_exists( $meta_new_filepath ) )
+						|| is_writable( $meta_new_filepath ) ) ) {
+						// WP Retina 2x is detected, let's rename those files as well
+						if ( function_exists( 'wr2x_generate_images' ) ) {
+							$wr2x_old_filepath = $this->str_replace( '.' . $ext, '@2x.' . $ext, $meta_old_filepath );
+							$wr2x_new_filepath = $this->str_replace( '.' . $ext, '@2x.' . $ext, $meta_new_filepath );
+							if ( file_exists( $wr2x_old_filepath ) && ( (!file_exists( $wr2x_new_filepath ) ) || is_writable( $wr2x_new_filepath ) ) ) {
+								rename( $wr2x_old_filepath, $wr2x_new_filepath );
+								$this->log( "Retina file $wr2x_old_filepath renamed to $wr2x_new_filepath." );
+								do_action( 'mfrh_path_renamed', $post, $wr2x_old_filepath, $wr2x_new_filepath );
+							}
 						}
+						rename( $meta_old_filepath, $meta_new_filepath );
+						$meta['sizes'][$size]['file'] = $meta_new_filename;
+						$this->log( "File $meta_old_filepath renamed to $meta_new_filepath." );
+						do_action( 'mfrh_path_renamed', $post, $meta_old_filepath, $meta_new_filepath );
 					}
-					rename( $meta_old_filepath, $meta_new_filepath );
-					$meta['sizes'][$size]['file'] = $meta_new_filename;
-					$this->log( "File $meta_old_filepath renamed to $meta_new_filepath." );
-					do_action( 'mfrh_path_renamed', $post, $meta_old_filepath, $meta_new_filepath );
 				}
 			}
-		} else {
+		}
+		else {
 			$orig_attachment_url = wp_get_attachment_url( $post['ID'] );
 		}
 
@@ -975,11 +993,13 @@ class Meow_MediaFileRenamer {
 			$new_image_data = wp_get_attachment_image_src( $post['ID'], 'full' );
 			$new_image_url = $new_image_data[0];
 			do_action( 'mfrh_url_renamed', $post, $orig_image_url, $new_image_url );
-			foreach ( $meta['sizes'] as $size => $meta_size ) {
-				$orig_image_url = $orig_image_urls[$size];
-				$new_image_data = wp_get_attachment_image_src( $post['ID'], $size );
-				$new_image_url = $new_image_data[0];
-				do_action( 'mfrh_url_renamed', $post, $orig_image_url, $new_image_url );
+			if ( !empty( $meta['sizes'] ) ) {
+				foreach ( $meta['sizes'] as $size => $meta_size ) {
+					$orig_image_url = $orig_image_urls[$size];
+					$new_image_data = wp_get_attachment_image_src( $post['ID'], $size );
+					$new_image_url = $new_image_data[0];
+					do_action( 'mfrh_url_renamed', $post, $orig_image_url, $new_image_url );
+				}
 			}
 		}
 		else {
